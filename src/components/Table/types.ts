@@ -4,6 +4,22 @@ import type { ReactNode } from 'react'
 
 export type SortDirection = 'asc' | 'desc'
 
+export type FilterType = 'text' | 'select' | 'date' | 'dateRange'
+
+export interface SelectOption {
+  value: string
+  label: string
+}
+
+export interface ColumnFilter {
+  /** Filter type */
+  type: FilterType
+  /** Placeholder text */
+  placeholder?: string
+  /** Options for select filter */
+  options?: SelectOption[]
+}
+
 export interface Column<T> {
   /** Unique key for the column */
   id: string
@@ -25,6 +41,10 @@ export interface Column<T> {
   render?: (value: unknown, row: T, rowIndex: number) => ReactNode
   /** Hide column on smaller screens */
   hideOnMobile?: boolean
+  /** Column filter configuration */
+  filter?: ColumnFilter
+  /** Make column clickable - shows detail panel on click */
+  clickable?: boolean
 }
 
 export interface SmartAction<T> {
@@ -44,6 +64,8 @@ export interface SmartAction<T> {
   divider?: boolean
 }
 
+export type FilterValues = Record<string, string | string[] | { start?: string; end?: string }>
+
 export interface TableProps<T> {
   /** Table data */
   data: T[]
@@ -59,6 +81,10 @@ export interface TableProps<T> {
   selectedRows?: (string | number)[]
   /** Selection change handler */
   onSelectionChange?: (selectedKeys: (string | number)[]) => void
+  /** Maximum number of rows that can be selected */
+  maxSelection?: number
+  /** Callback when a clickable cell is clicked */
+  onCellClick?: (columnId: string, row: T, rowIndex: number) => void
   /** Enable sorting */
   sortable?: boolean
   /** Current sort column */
@@ -95,5 +121,11 @@ export interface TableProps<T> {
   elevation?: number
   /** Custom class name */
   className?: string
+  /** Enable column filters */
+  filterable?: boolean
+  /** Current filter values */
+  filterValues?: FilterValues
+  /** Filter change handler */
+  onFilterChange?: (columnId: string, value: string | string[] | { start?: string; end?: string }) => void
 }
 
