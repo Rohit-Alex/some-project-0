@@ -1,3 +1,3 @@
-export { Login, Signup, ForgotPassword } from './Auth'
+export { Login, Signup, ForgotPassword, CheckMail } from './Auth';
 
-export { Dashboard } from './Dashboard'
+export { Dashboard } from './Dashboard';

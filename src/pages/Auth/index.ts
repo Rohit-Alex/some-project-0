@@ -1,3 +1,4 @@
-export { Login } from './Login'
-export { Signup } from './Signup'
-export { ForgotPassword } from './ForgotPassword'
+export { Login } from './Login';
+export { Signup } from './Signup';
+export { CheckMail } from './CheckMail';
+export { ForgotPassword } from './ForgotPassword';
