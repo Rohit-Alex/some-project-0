@@ -10,6 +10,9 @@ export const ROUTES = {
 
     // Protected - Dashboard
     DASHBOARD: '/dashboard',
+    DASHBOARD_DEVICE_CONTROL: '/dashboard/device-control',
+    DASHBOARD_DATA_TRANSFER: '/dashboard/data-transfer',
+    DASHBOARD_APPLICATION_CONTROL: '/dashboard/application-control',
     PROFILE: '/profile/view',
     PROFILE_EDIT: '/profile/edit',
     SETTINGS: '/settings',

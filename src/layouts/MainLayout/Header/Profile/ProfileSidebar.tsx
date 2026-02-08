@@ -1,11 +1,11 @@
+import { useMemo, useState } from "react";
 import MainCard from "@components/MainCard";
 import { alpha } from "@mui/material/styles";
 import { useAuthUser } from "@/modules/auth";
-import React, { useEffect, useState } from "react";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { useNavigate, useLocation } from "react-router-dom";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import avatar1 from "../../../../../dist/assets/images/avatar-1.png";
+import avatar1 from "/assets/avatar.png";
 import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
 import { Box, Stack, FormLabel, Typography, List, ListItemButton, ListItemIcon, ListItemText, Avatar } from "@mui/material";
 
@@ -15,19 +15,21 @@ export default function ProfileSidebar() {
     const user = useAuthUser();
     
     const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
-    const [avatarPreview, setAvatarPreview] = useState(avatar1);
 
-    useEffect(() => {
-        if (selectedImage) {
-            const objectUrl = URL.createObjectURL(selectedImage);
-            setAvatarPreview(objectUrl);
-            return () => URL.revokeObjectURL(objectUrl);
-        }
+    // Use useMemo instead of useEffect + setState to avoid cascading renders
+    const avatarPreview = useMemo(() => {
+        if (!selectedImage) return avatar1;
+        return URL.createObjectURL(selectedImage);
     }, [selectedImage]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files?.[0]) {
-            setSelectedImage(e.target.files[0]);
+        const file = e.target.files?.[0];
+        if (file) {
+            // Revoke previous object URL to prevent memory leaks
+            if (selectedImage) {
+                URL.revokeObjectURL(avatarPreview);
+            }
+            setSelectedImage(file);
         }
     };
 

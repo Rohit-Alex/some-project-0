@@ -3,21 +3,17 @@
 type MockDataGenerator<T> = T | (() => T) | (() => Promise<T>)
 
 interface WithMockDataOptions {
-  /** Delay in milliseconds before returning mock data */
-  delay?: number
-  /** Call the real API anyway (for logging/debugging) */
+  delay?: number // in milliseconds
   callApiAnyway?: boolean
-  /** Callback when mock data is used */
   onMockUsed?: () => void
 }
 
 const DEFAULT_OPTIONS: WithMockDataOptions = {
   delay: 500,
-  callApiAnyway: false,
+  callApiAnyway: true,
   onMockUsed: undefined,
 }
 
-// Check if we should use mock data from env
 export const shouldUseMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 /**
@@ -54,10 +50,6 @@ export async function withMockData<T>(
 
   // Notify that mock data is being used
   onMockUsed?.()
-
-  if (import.meta.env.DEV) {
-    console.debug('[MockData] Using mock data')
-  }
 
   // Add artificial delay to simulate network latency
   if (delay && delay > 0) {
