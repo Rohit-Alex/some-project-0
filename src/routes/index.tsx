@@ -11,6 +11,13 @@ import { Login, Signup, ForgotPassword, Dashboard, CheckMail } from '@/pages';
 // Event Pages
 import { ApplicationControl } from '@pages/Events';
 
+// Dashboard Pages
+import {
+    DeviceControlDashboard,
+    DataTransferDashboard,
+    ApplicationControlDashboard,
+} from '@pages/Dashboard';
+
 // Profile
 import TabPersonal from '@/layouts/MainLayout/Header/Profile/TabPersonal';
 import TabPassword from '@/layouts/MainLayout/Header/Profile/TabPassword';
@@ -79,9 +86,38 @@ const router = createBrowserRouter([
                             },
                         ]
                     },
+                    // Dashboard Modules
+                    {
+                        path: ROUTES.DASHBOARD_DEVICE_CONTROL,
+                        element: <DeviceControlDashboard />,
+                    },
+                    {
+                        path: ROUTES.DASHBOARD_DATA_TRANSFER,
+                        element: <DataTransferDashboard />,
+                    },
+                    {
+                        path: ROUTES.DASHBOARD_APPLICATION_CONTROL,
+                        element: <ApplicationControlDashboard />,
+                    },
                     // Events
                     {
                         path: ROUTES.EVENTS_APPLICATION_CONTROL,
+                        element: <ApplicationControl />,
+                    },
+                    {
+                        path: ROUTES.EVENTS_DATA_CLASSIFICATION,
+                        element: <ApplicationControl />,
+                    },
+                    {
+                        path: ROUTES.EVENTS_DATA_TRANSFER,
+                        element: <ApplicationControl />,
+                    },
+                    {
+                        path: ROUTES.EVENTS_DEVICE_CONTROL,
+                        element: <ApplicationControl />,
+                    },
+                    {
+                        path: ROUTES.DEVICE_HEALTH_ENDPOINTS,
                         element: <ApplicationControl />,
                     },
                     // Other dynamic routes (placeholders)

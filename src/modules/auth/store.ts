@@ -15,6 +15,8 @@ const defaultState: AuthState = {
     forgotPassword: API_STATUS.Uninitialized,
     resetPassword: API_STATUS.Uninitialized,
     fetchUser: API_STATUS.Uninitialized,
+    logout: API_STATUS.Uninitialized,
+    updatePassword: API_STATUS.Uninitialized,
   },
 }
 

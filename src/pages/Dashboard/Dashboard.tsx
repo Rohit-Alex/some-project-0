@@ -110,7 +110,7 @@ export default function Dashboard() {
       {/* Welcome Section */}
       <div>
         <Typography variant="h4" gutterBottom>
-          Welcome back, {user?.name || 'User'}!
+          Welcome back, {user?.firstName || 'User'}!
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Here's what's happening with your projects today.
