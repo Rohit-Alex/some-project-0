@@ -1,0 +1,12 @@
+export { default as KpiStatsWidget } from './KpiStatsWidget'
+export { default as FootprintWidget } from './FootprintWidget'
+export { default as CategoryInventoryWidget } from './CategoryInventoryWidget'
+export { default as VendorInventoryWidget } from './VendorInventoryWidget'
+export { default as NewAppTrendWidget } from './NewAppTrendWidget'
+export { default as RecentInstallsWidget } from './RecentInstallsWidget'
+export { default as DeptApplicationsWidget } from './DeptApplicationsWidget'
+export { default as BlockByCategoryWidget } from './BlockByCategoryWidget'
+export { default as TopBlockedAppsWidget } from './TopBlockedAppsWidget'
+export { default as UserBlockWidget } from './UserBlockWidget'
+export { default as EndpointBlockWidget } from './EndpointBlockWidget'
+
