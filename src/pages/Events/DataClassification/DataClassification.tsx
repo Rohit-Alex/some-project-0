@@ -3,8 +3,6 @@ import Typography from '@mui/material/Typography'
 import Paper from '@mui/material/Paper'
 import Collapse from '@mui/material/Collapse'
 import IconButton from '@mui/material/IconButton'
-import Grid from '@mui/material/Grid'
-import Box from '@mui/material/Box'
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined'
 import ComputerOutlined from '@mui/icons-material/ComputerOutlined'
 import BlockOutlined from '@mui/icons-material/BlockOutlined'
@@ -16,68 +14,31 @@ import Table from '@components/Table/Table'
 import TimeRangeFilter from '@components/TimeRangeFilter'
 import TableToolbar from '@components/TableToolbar'
 import { useTableParams } from '@hooks/useTableParams'
-import { useApplicationControlEvents, useExportApplicationControlEvents } from './hooks'
-import { APPLICATION_CONTROL_COLUMNS, ROWS_PER_PAGE_OPTIONS } from './constants'
+import { useDataClassificationEvents, useExportDataClassificationEvents } from './hooks'
+import { DATA_CLASSIFICATION_COLUMNS, ROWS_PER_PAGE_OPTIONS, USER_DETAIL_COLUMNS } from './constants'
 import { getDateRangeFromTimeRange, filtersToApiParams } from './helpers'
-import { getMockAppEventDetail } from './mockedData'
-import type { ApplicationControlFilters, ApplicationControlEvent, AppEventDetail } from './types'
+import type { DataClassificationFilters, DataClassificationEvent, UserDetail } from './types'
 
-// Detail section component
-interface DetailSectionProps {
-  title: string
-  data: Record<string, string | undefined>
-}
+// Mock user detail data - in real app this would come from API
+const getMockUserDetail = (user: string): UserDetail => ({
+  domainName: 'xyz.com',
+  upnLogonName: user.split('\\')[1] || user,
+  adOU: 'Sales',
+  adGroups: 'Sales_team, Marketing_insights',
+  userTitle: 'Sales Executive',
+  emailId: `${user.split('\\')[1] || 'user'}@gmail.com`,
+  department: 'Sales',
+  managerName: 'Sunil',
+  managerEmailId: 'Sunil@gmail.com',
+  managerTitle: 'CSO',
+})
 
-function DetailSection({ title, data }: DetailSectionProps) {
-  return (
-    <Box>
-      <Typography
-        variant="subtitle2"
-        fontWeight={700}
-        sx={{
-          mb: 1.5,
-          pb: 0.5,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        {title}
-      </Typography>
-      <Grid container spacing={1}>
-        {Object.entries(data).map(([key, value]) => (
-          <Grid item xs={12} sm={6} key={key}>
-            <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ minWidth: 140, fontWeight: 600 }}
-              >
-                {formatLabel(key)}
-              </Typography>
-              <Typography variant="caption" sx={{ wordBreak: 'break-word' }}>
-                {value || '-'}
-              </Typography>
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-  )
-}
-
-// Format camelCase to readable label
-function formatLabel(key: string): string {
-  return key
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (str) => str.toUpperCase())
-    .trim()
-}
-
-export default function ApplicationControl() {
+export default function DataClassification() {
   const [selectedRows, setSelectedRows] = useState<(string | number)[]>([])
   const [detailPanel, setDetailPanel] = useState<{
-    row: ApplicationControlEvent
-    data: AppEventDetail
+    columnId: string
+    row: DataClassificationEvent
+    data: UserDetail | null
   } | null>(null)
 
   const {
@@ -114,11 +75,11 @@ export default function ApplicationControl() {
 
   // Memoize API filters
   const apiFilters = useMemo(
-    () => filtersToApiParams(filters) as ApplicationControlFilters,
+    () => filtersToApiParams(filters) as DataClassificationFilters,
     [filters]
   )
 
-  const { data, isLoading, refetch } = useApplicationControlEvents({
+  const { data, isLoading, refetch } = useDataClassificationEvents({
     page,
     limit: rowsPerPage,
     sortBy,
@@ -129,7 +90,7 @@ export default function ApplicationControl() {
     endDate: dateRange.endDate,
   })
 
-  const { exportData } = useExportApplicationControlEvents()
+  const { exportData } = useExportDataClassificationEvents()
 
   const handleRefresh = () => {
     refetch()
@@ -139,10 +100,12 @@ export default function ApplicationControl() {
     setSelectedRows(keys)
   }, [])
 
-  const handleRowClick = useCallback((row: ApplicationControlEvent) => {
-    // Get detailed event data
-    const detail = getMockAppEventDetail(row)
-    setDetailPanel({ row, data: detail })
+  const handleCellClick = useCallback((columnId: string, row: DataClassificationEvent) => {
+    // Handle clickable columns - fetch detail data
+    if (columnId === 'loggedInUser') {
+      const userDetail = getMockUserDetail(row.loggedInUser)
+      setDetailPanel({ columnId, row, data: userDetail })
+    }
   }, [])
 
   const handleCloseDetailPanel = () => {
@@ -151,10 +114,15 @@ export default function ApplicationControl() {
 
   const stats = data?.stats
 
+  // Convert user detail to array format for table display
+  const userDetailData = detailPanel?.data
+    ? [detailPanel.data]
+    : []
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <Typography variant="h5">Application Control Events</Typography>
+        <Typography variant="h5">Data Classification Events</Typography>
         <TimeRangeFilter value={timeRange} onChange={setTimeRange} />
       </div>
 
@@ -209,7 +177,7 @@ export default function ApplicationControl() {
       {/* Main Table */}
       <Table
         data={data?.data ?? []}
-        columns={APPLICATION_CONTROL_COLUMNS}
+        columns={DATA_CLASSIFICATION_COLUMNS}
         rowKey="id"
         loading={isLoading}
         sortable
@@ -232,13 +200,13 @@ export default function ApplicationControl() {
         selectedRows={selectedRows}
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
-        onRowClick={handleRowClick}
-        emptyMessage="No application control events found"
+        onCellClick={handleCellClick}
+        emptyMessage="No data classification events found"
         smartActions={[
           {
             id: 'view',
             label: 'View Details',
-            onClick: handleRowClick,
+            onClick: (row) => console.log('View:', row),
           },
           {
             id: 'export-row',
@@ -252,52 +220,23 @@ export default function ApplicationControl() {
       <Collapse in={!!detailPanel}>
         {detailPanel && (
           <Paper elevation={0} className="border border-gray-200 dark:border-gray-700">
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                px: 2,
-                py: 1.5,
-                borderBottom: 1,
-                borderColor: 'divider',
-                bgcolor: 'action.hover',
-              }}
-            >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
               <Typography variant="subtitle1" fontWeight={600}>
-                Event Details - {detailPanel.row.applicationName}
+                User Details - {detailPanel.row.loggedInUser}
               </Typography>
               <IconButton size="small" onClick={handleCloseDetailPanel}>
                 <CloseOutlined fontSize="small" />
               </IconButton>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Grid container spacing={3}>
-                {/* Event Summary */}
-                <Grid item xs={12} md={4}>
-                  <DetailSection
-                    title="Event Summary"
-                    data={detailPanel.data.eventSummary as unknown as Record<string, string>}
-                  />
-                </Grid>
-
-                {/* Application Attributes */}
-                <Grid item xs={12} md={4}>
-                  <DetailSection
-                    title="Application Attributes"
-                    data={detailPanel.data.applicationAttributes as unknown as Record<string, string>}
-                  />
-                </Grid>
-
-                {/* User Details */}
-                <Grid item xs={12} md={4}>
-                  <DetailSection
-                    title="User Details"
-                    data={detailPanel.data.userDetails as unknown as Record<string, string>}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
+            </div>
+            <div className="p-4">
+              <Table
+                data={userDetailData}
+                columns={USER_DETAIL_COLUMNS}
+                rowKey="emailId"
+                dense
+                stickyHeader={false}
+              />
+            </div>
           </Paper>
         )}
       </Collapse>
