@@ -44,6 +44,7 @@ function DetailSection({ title, data }: DetailSectionProps) {
       >
         {title}
       </Typography>
+      
       <Grid container spacing={1}>
         {Object.entries(data).map(([key, value]) => (
           <Grid size={{ xs:12, sm:6 }} key={key}>
