@@ -1,5 +1,5 @@
 import type { Column } from '@components/Table/types'
-import type { ApplicationControlEvent, UserDetail } from '../types'
+import type { ApplicationControlEvent } from '../types'
 
 export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
   {
@@ -8,7 +8,7 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
     accessor: 'eventId',
     minWidth: 100,
     sticky: 'left',
-    filter: { type: 'text', placeholder: 'Search...' },
+    filter: { type: 'text', placeholder: 'Filter Search' },
   },
   {
     id: 'hostname',
@@ -43,7 +43,7 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
       options: [
         { value: 'Blocked', label: 'Blocked' },
         { value: 'Allowed', label: 'Allowed' },
-        { value: 'Warned', label: 'Warned' },
+        { value: 'Online', label: 'Online' },
       ],
     },
   },
@@ -52,7 +52,15 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
     label: 'Channel',
     accessor: 'channel',
     minWidth: 150,
-    filter: { type: 'text', placeholder: 'Filter Search' },
+    filter: {
+      type: 'select',
+      placeholder: 'All',
+      options: [
+        { value: 'Application Control', label: 'Application Control' },
+        { value: 'USB', label: 'USB' },
+        { value: 'Network', label: 'Network' },
+      ],
+    },
   },
   {
     id: 'applicationName',
@@ -65,14 +73,14 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
     id: 'companyName',
     label: 'Company Name',
     accessor: 'companyName',
-    minWidth: 140,
+    minWidth: 130,
     filter: { type: 'text', placeholder: 'Filter Search' },
   },
   {
     id: 'filename',
     label: 'Filename',
     accessor: 'filename',
-    minWidth: 130,
+    minWidth: 140,
     filter: { type: 'text', placeholder: 'Filter Search' },
   },
   {
@@ -85,9 +93,10 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
       placeholder: 'All',
       options: [
         { value: 'Executable', label: 'Executable' },
+        { value: 'DLL', label: 'DLL' },
         { value: 'Script', label: 'Script' },
+        { value: 'Installer', label: 'Installer' },
         { value: 'Document', label: 'Document' },
-        { value: 'Archive', label: 'Archive' },
       ],
     },
   },
@@ -103,72 +112,9 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
     label: 'Event Time',
     accessor: 'eventTime',
     minWidth: 180,
+    sticky: 'right',
     filter: { type: 'date' },
   },
 ]
 
 export const ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
-
-export const USER_DETAIL_COLUMNS: Column<UserDetail>[] = [
-  {
-    id: 'domainName',
-    label: 'Domain Name',
-    accessor: 'domainName',
-    minWidth: 120,
-  },
-  {
-    id: 'upnLogonName',
-    label: 'UPN / Logon Name',
-    accessor: 'upnLogonName',
-    minWidth: 140,
-  },
-  {
-    id: 'adOU',
-    label: 'AD OU',
-    accessor: 'adOU',
-    minWidth: 100,
-  },
-  {
-    id: 'adGroups',
-    label: 'AD Groups',
-    accessor: 'adGroups',
-    minWidth: 180,
-  },
-  {
-    id: 'userTitle',
-    label: 'User Title',
-    accessor: 'userTitle',
-    minWidth: 120,
-  },
-  {
-    id: 'emailId',
-    label: 'Email ID',
-    accessor: 'emailId',
-    minWidth: 180,
-  },
-  {
-    id: 'department',
-    label: 'Department',
-    accessor: 'department',
-    minWidth: 100,
-  },
-  {
-    id: 'managerName',
-    label: 'Manager Name',
-    accessor: 'managerName',
-    minWidth: 120,
-  },
-  {
-    id: 'managerEmailId',
-    label: 'Manager Email ID',
-    accessor: 'managerEmailId',
-    minWidth: 180,
-  },
-  {
-    id: 'managerTitle',
-    label: 'Manager Title',
-    accessor: 'managerTitle',
-    minWidth: 100,
-  },
-]
-

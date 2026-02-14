@@ -30,7 +30,6 @@
       "@types/*": ["src/types/*"],
       "@layouts/*": ["src/layouts/*"],
       "@pages/*": ["src/pages/*"],
-      "@assets/*": ["src/assets/*"]
     },
 
     /* Linting */

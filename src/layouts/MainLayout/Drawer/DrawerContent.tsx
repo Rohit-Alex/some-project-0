@@ -31,6 +31,23 @@ import WidgetsOutlined from '@mui/icons-material/WidgetsOutlined'
 import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
 import SettingsApplicationsOutlined from '@mui/icons-material/SettingsApplicationsOutlined'
 import ClassOutlined from '@mui/icons-material/ClassOutlined'
+import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
+import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
+import PersonAddOutlined from '@mui/icons-material/PersonAddOutlined'
+import EditOutlined from '@mui/icons-material/EditOutlined'
+import LoginOutlined from '@mui/icons-material/LoginOutlined'
+import AdminPanelSettingsOutlined from '@mui/icons-material/AdminPanelSettingsOutlined'
+import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined'
+import FolderOutlined from '@mui/icons-material/FolderOutlined'
+import AddCircleOutlineOutlined from '@mui/icons-material/AddCircleOutlineOutlined'
+import DnsOutlined from '@mui/icons-material/DnsOutlined'
+import SearchOutlined from '@mui/icons-material/SearchOutlined'
+import EmailOutlined from '@mui/icons-material/EmailOutlined'
+import MarkEmailReadOutlined from '@mui/icons-material/MarkEmailReadOutlined'
+import VpnKeyOutlined from '@mui/icons-material/VpnKeyOutlined'
+import MailOutlineOutlined from '@mui/icons-material/MailOutlineOutlined'
+import FileCopyOutlined from '@mui/icons-material/FileCopyOutlined'
+import ForwardToInboxOutlined from '@mui/icons-material/ForwardToInboxOutlined'
 
 import {
   NAV_ITEMS,
@@ -62,6 +79,23 @@ const ICON_MAP: Record<IconName, ReactNode> = {
   'list-alt': <ListAltOutlined />,
   'settings-apps': <SettingsApplicationsOutlined />,
   class: <ClassOutlined />,
+  settings: <SettingsOutlined />,
+  people: <PeopleOutlined />,
+  'person-add': <PersonAddOutlined />,
+  edit: <EditOutlined />,
+  login: <LoginOutlined />,
+  admin: <AdminPanelSettingsOutlined />,
+  notifications: <NotificationsOutlined />,
+  folder: <FolderOutlined />,
+  'add-circle': <AddCircleOutlineOutlined />,
+  dns: <DnsOutlined />,
+  search: <SearchOutlined />,
+  email: <EmailOutlined />,
+  'mail-add': <MarkEmailReadOutlined />,
+  key: <VpnKeyOutlined />,
+  'mail-settings': <ForwardToInboxOutlined />,
+  'file-copy': <FileCopyOutlined />,
+  'mail-outline': <MailOutlineOutlined />,
 }
 
 const getIcon = (iconName?: IconName): ReactNode => {

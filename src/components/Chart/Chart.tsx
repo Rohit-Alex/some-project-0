@@ -3,12 +3,32 @@ import type { ReactNode } from 'react'
 import ReactApexChart from 'react-apexcharts'
 import { useTheme } from '@mui/material/styles'
 import Skeleton from '@mui/material/Skeleton'
+import Typography from '@mui/material/Typography'
 import type { ApexOptions } from 'apexcharts'
 import type { ChartProps } from './types'
 import { useThemeStore } from '@store/useThemeStore'
 import { ThemeMode } from '@config/index'
 
 // ==============================|| REUSABLE CHART ||============================== //
+
+// Check if series has data
+function hasData(series: ChartProps['series']): boolean {
+  if (!series || !Array.isArray(series)) return false
+  if (series.length === 0) return false
+
+  // For pie/donut/radialBar charts, series is number[]
+  if (typeof series[0] === 'number') {
+    return series.some((v) => v !== 0)
+  }
+
+  // For bar/line/area charts, series is { name, data }[]
+  return series.some((s) => {
+    if (typeof s === 'object' && 'data' in s && Array.isArray(s.data)) {
+      return s.data.length > 0
+    }
+    return false
+  })
+}
 
 export default function Chart({
   type,
@@ -44,18 +64,18 @@ export default function Chart({
   // Theme-aware colors
   const textColor = theme.palette.text.primary
   const gridColor = theme.palette.divider
-  const defaultColors = [
-    theme.palette.primary.main,
-    theme.palette.primary.dark,
-    theme.palette.secondary.main,
-    theme.palette.success.main,
-    theme.palette.warning.main,
-    theme.palette.error.main,
-    theme.palette.info.main,
-  ]
 
   // Build chart options
   const chartOptions: ApexOptions = useMemo(() => {
+    const defaultColors = [
+      theme.palette.primary.main,
+      theme.palette.primary.dark,
+      theme.palette.secondary.main,
+      theme.palette.success.main,
+      theme.palette.warning.main,
+      theme.palette.error.main,
+      theme.palette.info.main,
+    ]
     const baseOptions: ApexOptions = {
       chart: {
         type: type === 'bar' ? 'bar' : type,
@@ -151,14 +171,25 @@ export default function Chart({
           formatter: tooltipFormatter,
         },
       },
-      theme: {
-        mode: isDark ? 'dark' : 'light',
+      // Note: Don't use theme.mode as it can override custom colors in ApexCharts 4.x
+      noData: {
+        text: 'No data available',
+        align: 'center',
+        verticalAlign: 'middle',
+        style: {
+          color: textColor,
+          fontSize: '14px',
+        },
       },
       plotOptions: {
         bar: {
           horizontal: false,
           columnWidth,
+          barHeight: '70%',
           borderRadius: 4,
+          dataLabels: {
+            position: 'top',
+          },
         },
         pie: {
           donut: {
@@ -223,7 +254,6 @@ export default function Chart({
     animated,
     stacked,
     colors,
-    defaultColors,
     showDataLabels,
     curve,
     fillType,
@@ -243,6 +273,75 @@ export default function Chart({
     customOptions,
   ])
 
+  // Build bar chart options (simplified to avoid rendering issues)
+  const barChartOptions: ApexOptions = useMemo(() => {
+    return {
+      chart: {
+        type: 'bar',
+        background: 'transparent',
+        toolbar: { show: showToolbar },
+        animations: { enabled: animated },
+        stacked,
+      },
+      plotOptions: {
+        bar: {
+          horizontal: customOptions?.plotOptions?.bar?.horizontal ?? false,
+          distributed: customOptions?.plotOptions?.bar?.distributed ?? false,
+          columnWidth,
+          barHeight: '70%',
+          borderRadius: 4,
+        },
+      },
+      xaxis: {
+        categories,
+        labels: {
+          style: { colors: textColor, fontSize: '12px' },
+        },
+      },
+      yaxis: {
+        labels: {
+          style: { colors: textColor, fontSize: '12px' },
+          formatter: yAxisFormatter,
+        },
+      },
+      colors: colors ?? [theme.palette.primary.main],
+      dataLabels: { enabled: showDataLabels },
+      grid: {
+        show: showGrid,
+        borderColor: gridColor,
+      },
+      legend: {
+        show: showLegend,
+        position: legendPosition,
+        labels: { colors: textColor },
+      },
+      tooltip: {
+        theme: isDark ? 'dark' : 'light',
+      },
+    }
+  }, [
+    showToolbar,
+    animated,
+    stacked,
+    customOptions,
+    columnWidth,
+    categories,
+    textColor,
+    yAxisFormatter,
+    colors,
+    theme,
+    showDataLabels,
+    showGrid,
+    gridColor,
+    showLegend,
+    legendPosition,
+    isDark,
+  ])
+
+  // Choose the right options based on chart type
+  const finalOptions = type === 'bar' ? barChartOptions : chartOptions
+
+  // Show loading state
   if (loading) {
     return (
       <Skeleton
@@ -255,10 +354,30 @@ export default function Chart({
     )
   }
 
+  // Show empty state if no data
+  if (!hasData(series)) {
+    return (
+      <div
+        className={`flex items-center justify-center ${className}`}
+        style={{ height: typeof height === 'number' ? height : 200 }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          No data available
+        </Typography>
+      </div>
+    )
+  }
+
   return (
-    <div className={className}>
+    <div
+      className={className}
+      style={{
+        minHeight: typeof height === 'number' ? height : 200,
+        width: '100%',
+      }}
+    >
       <ReactApexChart
-        options={chartOptions}
+        options={finalOptions}
         series={series}
         type={type}
         height={height}
