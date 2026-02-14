@@ -45,7 +45,7 @@ function DetailSection({ title, data }: DetailSectionProps) {
       </Typography>
       <Grid container spacing={1}>
         {Object.entries(data).map(([key, value]) => (
-          <Grid item xs={12} sm={6} key={key}>
+          <Grid size={{ xs:12, sm:6 }} key={key}>
             <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
               <Typography
                 variant="caption"
@@ -232,7 +232,7 @@ export default function ApplicationControl() {
         selectedRows={selectedRows}
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
-        onRowClick={handleRowClick}
+        // onRowClick={handleRowClick}
         emptyMessage="No application control events found"
         smartActions={[
           {
@@ -274,7 +274,7 @@ export default function ApplicationControl() {
             <Box sx={{ p: 2 }}>
               <Grid container spacing={3}>
                 {/* Event Summary */}
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs:12, md:4 }}>
                   <DetailSection
                     title="Event Summary"
                     data={detailPanel.data.eventSummary as unknown as Record<string, string>}
@@ -282,7 +282,7 @@ export default function ApplicationControl() {
                 </Grid>
 
                 {/* Application Attributes */}
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs:12, md:4 }}>
                   <DetailSection
                     title="Application Attributes"
                     data={detailPanel.data.applicationAttributes as unknown as Record<string, string>}
@@ -290,7 +290,7 @@ export default function ApplicationControl() {
                 </Grid>
 
                 {/* User Details */}
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs:12, md:4 }}>
                   <DetailSection
                     title="User Details"
                     data={detailPanel.data.userDetails as unknown as Record<string, string>}

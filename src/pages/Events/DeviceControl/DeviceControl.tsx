@@ -46,7 +46,7 @@ function DetailSection({ title, data }: DetailSectionProps) {
       </Typography>
       <Grid container spacing={1}>
         {Object.entries(data).map(([key, value]) => (
-          <Grid item xs={12} sm={6} key={key}>
+          <Grid size={{ xs:12, sm:6 }} key={key}>
             <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
               <Typography
                 variant="caption"
@@ -239,7 +239,7 @@ export default function DeviceControl() {
         selectedRows={selectedRows}
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
-        onRowClick={handleRowClick}
+        // onRowClick={handleRowClick}
         emptyMessage="No device control events found"
         smartActions={[
           {
@@ -281,7 +281,7 @@ export default function DeviceControl() {
             <Box sx={{ p: 2 }}>
               <Grid container spacing={3}>
                 {/* Event Summary */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <DetailSection
                     title="Event Summary"
                     data={detailPanel.data.eventSummary as unknown as Record<string, string>}
@@ -289,7 +289,7 @@ export default function DeviceControl() {
                 </Grid>
 
                 {/* File Attributes */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <DetailSection
                     title="File Attributes"
                     data={detailPanel.data.fileAttributes as unknown as Record<string, string>}
@@ -297,7 +297,7 @@ export default function DeviceControl() {
                 </Grid>
 
                 {/* User Details */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <DetailSection
                     title="User Details"
                     data={detailPanel.data.userDetails as unknown as Record<string, string>}
@@ -305,7 +305,7 @@ export default function DeviceControl() {
                 </Grid>
 
                 {/* DLP Details */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <DetailSection
                     title="DLP Details"
                     data={detailPanel.data.dlpDetails as unknown as Record<string, string>}
