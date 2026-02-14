@@ -49,7 +49,7 @@ function DetailSection({ title, data }: DetailSectionProps) {
       </Typography>
       <Grid container spacing={1}>
         {Object.entries(data).map(([key, value]) => (
-          <Grid item xs={12} key={key}>
+          <Grid size={{ xs:12 }} key={key}>
             <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
               <Typography
                 variant="caption"
@@ -256,7 +256,7 @@ export default function EndpointDevices() {
         selectedRows={selectedRows}
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
-        onRowClick={handleRowClick}
+        // onRowClick={handleRowClick}
         emptyMessage="No endpoint devices found"
         smartActions={[
           {
@@ -298,7 +298,7 @@ export default function EndpointDevices() {
             <Box sx={{ p: 2 }}>
               <Grid container spacing={3}>
                 {/* System Details */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <DetailSection
                     title="System Details"
                     data={detailPanel.data.systemDetails as unknown as Record<string, string>}
@@ -306,7 +306,7 @@ export default function EndpointDevices() {
                 </Grid>
 
                 {/* Agent Details */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <DetailSection
                     title="Agent Details"
                     data={detailPanel.data.agentDetails as unknown as Record<string, string>}
@@ -314,7 +314,7 @@ export default function EndpointDevices() {
                 </Grid>
 
                 {/* Domain Details */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <DetailSection
                     title="Domain Details"
                     data={detailPanel.data.domainDetails as unknown as Record<string, string>}
@@ -322,7 +322,7 @@ export default function EndpointDevices() {
                 </Grid>
 
                 {/* List of Applications Installed */}
-                <Grid item xs={12} md={6} lg={3}>
+                <Grid size={{ xs:12, md:6, lg:3 }}>
                   <Box>
                     <Box
                       sx={{
