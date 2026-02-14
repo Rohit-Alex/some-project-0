@@ -1,7 +1,7 @@
 import type { Column } from '@components/Table/types'
-import type { ApplicationControlEvent } from '../types'
+import type { DeviceControlEvent } from '../types'
 
-export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
+export const DEVICE_CONTROL_COLUMNS: Column<DeviceControlEvent>[] = [
   {
     id: 'eventId',
     label: 'Event ID',
@@ -43,7 +43,7 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
       options: [
         { value: 'Blocked', label: 'Blocked' },
         { value: 'Allowed', label: 'Allowed' },
-        { value: 'Online', label: 'Online' },
+        { value: 'Read Only', label: 'Read Only' },
       ],
     },
   },
@@ -51,60 +51,52 @@ export const APPLICATION_CONTROL_COLUMNS: Column<ApplicationControlEvent>[] = [
     id: 'channel',
     label: 'Channel',
     accessor: 'channel',
-    minWidth: 150,
+    minWidth: 100,
     filter: {
       type: 'select',
       placeholder: 'All',
       options: [
-        { value: 'Application Control', label: 'Application Control' },
         { value: 'USB', label: 'USB' },
-        { value: 'Network', label: 'Network' },
+        { value: 'Bluetooth', label: 'Bluetooth' },
+        { value: 'WiFi', label: 'WiFi' },
+        { value: 'Ethernet', label: 'Ethernet' },
+        { value: 'Thunderbolt', label: 'Thunderbolt' },
       ],
     },
   },
   {
-    id: 'applicationName',
-    label: 'Application Name',
-    accessor: 'applicationName',
+    id: 'deviceName',
+    label: 'Device Name',
+    accessor: 'deviceName',
     minWidth: 150,
     filter: { type: 'text', placeholder: 'Filter Search' },
   },
   {
-    id: 'companyName',
-    label: 'Company Name',
-    accessor: 'companyName',
-    minWidth: 130,
+    id: 'deviceSerialNumber',
+    label: 'Device Serial Number',
+    accessor: 'deviceSerialNumber',
+    minWidth: 160,
     filter: { type: 'text', placeholder: 'Filter Search' },
   },
   {
-    id: 'filename',
-    label: 'Filename',
-    accessor: 'filename',
-    minWidth: 140,
+    id: 'deviceVendorId',
+    label: 'Device Vendor Id',
+    accessor: 'deviceVendorId',
+    minWidth: 150,
     filter: { type: 'text', placeholder: 'Filter Search' },
   },
   {
-    id: 'fileType',
-    label: 'File Type',
-    accessor: 'fileType',
+    id: 'mount',
+    label: 'Mount',
+    accessor: 'mount',
+    minWidth: 80,
+    filter: { type: 'text', placeholder: 'Filter Search' },
+  },
+  {
+    id: 'domainName',
+    label: 'Domain Name',
+    accessor: 'domainName',
     minWidth: 120,
-    filter: {
-      type: 'select',
-      placeholder: 'All',
-      options: [
-        { value: 'Executable', label: 'Executable' },
-        { value: 'DLL', label: 'DLL' },
-        { value: 'Script', label: 'Script' },
-        { value: 'Installer', label: 'Installer' },
-        { value: 'Document', label: 'Document' },
-      ],
-    },
-  },
-  {
-    id: 'fileVersion',
-    label: 'File Version',
-    accessor: 'fileVersion',
-    minWidth: 110,
     filter: { type: 'text', placeholder: 'Filter Search' },
   },
   {

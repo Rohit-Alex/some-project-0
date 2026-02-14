@@ -11,6 +11,7 @@ import Checkbox from '@mui/material/Checkbox'
 import Paper from '@mui/material/Paper'
 import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
 import SmartActionsCell from './SmartActionsCell'
 import ColumnFilterCell from './ColumnFilterCell'
 import type { TableProps, Column, SortDirection } from './types'
@@ -188,7 +189,7 @@ export default function Table<T>({
                     indeterminate={isIndeterminate}
                     checked={isAllSelected}
                     onChange={handleSelectAll}
-                    inputProps={{ 'aria-label': 'select all' }}
+                    slotProps={{ input: { 'aria-label': 'select all' } }}
                   />
                 </TableCell>
               )}
@@ -203,17 +204,27 @@ export default function Table<T>({
                     ...getStickyStyles(column, true),
                   }}
                 >
-                  {sortable && column.sortable !== false ? (
-                    <TableSortLabel
-                      active={sortBy === column.id}
-                      direction={sortBy === column.id ? sortDirection : 'asc'}
-                      onClick={() => handleSort(column.id)}
-                    >
-                      {column.label}
-                    </TableSortLabel>
-                  ) : (
-                    column.label
-                  )}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {sortable && column.sortable !== false ? (
+                      <TableSortLabel
+                        active={sortBy === column.id}
+                        direction={sortBy === column.id ? sortDirection : 'asc'}
+                        onClick={() => handleSort(column.id)}
+                      >
+                        {column.label}
+                      </TableSortLabel>
+                    ) : (
+                      column.label
+                    )}
+                    {filterable && column.filter && onFilterChange && (
+                      <ColumnFilterCell
+                        columnId={column.id}
+                        filter={column.filter}
+                        value={filterValues[column.id]}
+                        onChange={onFilterChange}
+                      />
+                    )}
+                  </Box>
                 </TableCell>
               ))}
 
@@ -233,51 +244,6 @@ export default function Table<T>({
                 </TableCell>
               )}
             </TableRow>
-
-            {/* Filter row */}
-            {filterable && columns.some((col) => col.filter) && (
-              <TableRow>
-                {selectable && (
-                  <TableCell
-                    sx={{
-                      bgcolor: 'background.paper',
-                      position: 'sticky',
-                      left: 0,
-                      zIndex: 3,
-                    }}
-                  />
-                )}
-                {columns.map((column) => (
-                  <TableCell
-                    key={`filter-${column.id}`}
-                    sx={{
-                      py: 1,
-                      bgcolor: 'background.paper',
-                      ...getStickyStyles(column, true),
-                    }}
-                  >
-                    {column.filter && onFilterChange ? (
-                      <ColumnFilterCell
-                        columnId={column.id}
-                        filter={column.filter}
-                        value={filterValues[column.id]}
-                        onChange={onFilterChange}
-                      />
-                    ) : null}
-                  </TableCell>
-                ))}
-                {smartActions && (
-                  <TableCell
-                    sx={{
-                      bgcolor: 'background.paper',
-                      position: 'sticky',
-                      right: 0,
-                      zIndex: 3,
-                    }}
-                  />
-                )}
-              </TableRow>
-            )}
           </TableHead>
 
           <TableBody>
@@ -339,7 +305,7 @@ export default function Table<T>({
                           checked={selected}
                           disabled={!selected && isMaxSelected}
                           onChange={() => handleSelectRow(row)}
-                          inputProps={{ 'aria-label': `select row ${rowIndex}` }}
+                          slotProps={{ input: { 'aria-label': `select row ${rowIndex}` } }}
                         />
                       </TableCell>
                     )}

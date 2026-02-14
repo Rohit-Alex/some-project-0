@@ -9,7 +9,15 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Login, Signup, ForgotPassword, Dashboard, CheckMail } from '@/pages';
 
 // Event Pages
-import { ApplicationControl } from '@pages/Events';
+import {
+    ApplicationControl,
+    DataClassification,
+    DataTransfer,
+    DeviceControl,
+} from '@pages/Events';
+
+// Device Health Pages
+import { EndpointDevices } from '@pages/DeviceHealth';
 
 // Dashboard Pages
 import {
@@ -106,19 +114,20 @@ const router = createBrowserRouter([
                     },
                     {
                         path: ROUTES.EVENTS_DATA_CLASSIFICATION,
-                        element: <ApplicationControl />,
+                        element: <DataClassification />,
                     },
                     {
                         path: ROUTES.EVENTS_DATA_TRANSFER,
-                        element: <ApplicationControl />,
+                        element: <DataTransfer />,
                     },
                     {
                         path: ROUTES.EVENTS_DEVICE_CONTROL,
-                        element: <ApplicationControl />,
+                        element: <DeviceControl />,
                     },
+                    // Device Health
                     {
                         path: ROUTES.DEVICE_HEALTH_ENDPOINTS,
-                        element: <ApplicationControl />,
+                        element: <EndpointDevices />,
                     },
                     // Other dynamic routes (placeholders)
                     ...dynamicRoutes,

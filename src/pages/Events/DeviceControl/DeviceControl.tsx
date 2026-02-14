@@ -5,6 +5,7 @@ import Collapse from '@mui/material/Collapse'
 import IconButton from '@mui/material/IconButton'
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
+import Link from '@mui/material/Link'
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined'
 import ComputerOutlined from '@mui/icons-material/ComputerOutlined'
 import BlockOutlined from '@mui/icons-material/BlockOutlined'
@@ -16,11 +17,11 @@ import Table from '@components/Table/Table'
 import TimeRangeFilter from '@components/TimeRangeFilter'
 import TableToolbar from '@components/TableToolbar'
 import { useTableParams } from '@hooks/useTableParams'
-import { useApplicationControlEvents, useExportApplicationControlEvents } from './hooks'
-import { APPLICATION_CONTROL_COLUMNS, ROWS_PER_PAGE_OPTIONS } from './constants'
+import { useDeviceControlEvents, useExportDeviceControlEvents } from './hooks'
+import { DEVICE_CONTROL_COLUMNS, ROWS_PER_PAGE_OPTIONS } from './constants'
 import { getDateRangeFromTimeRange, filtersToApiParams } from './helpers'
-import { getMockAppEventDetail } from './mockedData'
-import type { ApplicationControlFilters, ApplicationControlEvent, AppEventDetail } from './types'
+import { getMockEventDetail } from './mockedData'
+import type { DeviceControlFilters, DeviceControlEvent, DeviceEventDetail } from './types'
 
 // Detail section component
 interface DetailSectionProps {
@@ -55,7 +56,13 @@ function DetailSection({ title, data }: DetailSectionProps) {
                 {formatLabel(key)}
               </Typography>
               <Typography variant="caption" sx={{ wordBreak: 'break-word' }}>
-                {value || '-'}
+                {key.toLowerCase().includes('link') || key.toLowerCase().includes('download') ? (
+                  <Link href="#" underline="hover">
+                    {value || '-'}
+                  </Link>
+                ) : (
+                  value || '-'
+                )}
               </Typography>
             </Box>
           </Grid>
@@ -73,11 +80,11 @@ function formatLabel(key: string): string {
     .trim()
 }
 
-export default function ApplicationControl() {
+export default function DeviceControl() {
   const [selectedRows, setSelectedRows] = useState<(string | number)[]>([])
   const [detailPanel, setDetailPanel] = useState<{
-    row: ApplicationControlEvent
-    data: AppEventDetail
+    row: DeviceControlEvent
+    data: DeviceEventDetail
   } | null>(null)
 
   const {
@@ -114,11 +121,11 @@ export default function ApplicationControl() {
 
   // Memoize API filters
   const apiFilters = useMemo(
-    () => filtersToApiParams(filters) as ApplicationControlFilters,
+    () => filtersToApiParams(filters) as DeviceControlFilters,
     [filters]
   )
 
-  const { data, isLoading, refetch } = useApplicationControlEvents({
+  const { data, isLoading, refetch } = useDeviceControlEvents({
     page,
     limit: rowsPerPage,
     sortBy,
@@ -129,7 +136,7 @@ export default function ApplicationControl() {
     endDate: dateRange.endDate,
   })
 
-  const { exportData } = useExportApplicationControlEvents()
+  const { exportData } = useExportDeviceControlEvents()
 
   const handleRefresh = () => {
     refetch()
@@ -139,9 +146,9 @@ export default function ApplicationControl() {
     setSelectedRows(keys)
   }, [])
 
-  const handleRowClick = useCallback((row: ApplicationControlEvent) => {
+  const handleRowClick = useCallback((row: DeviceControlEvent) => {
     // Get detailed event data
-    const detail = getMockAppEventDetail(row)
+    const detail = getMockEventDetail(row)
     setDetailPanel({ row, data: detail })
   }, [])
 
@@ -154,7 +161,7 @@ export default function ApplicationControl() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <Typography variant="h5">Application Control Events</Typography>
+        <Typography variant="h5">Device Control Events</Typography>
         <TimeRangeFilter value={timeRange} onChange={setTimeRange} />
       </div>
 
@@ -209,7 +216,7 @@ export default function ApplicationControl() {
       {/* Main Table */}
       <Table
         data={data?.data ?? []}
-        columns={APPLICATION_CONTROL_COLUMNS}
+        columns={DEVICE_CONTROL_COLUMNS}
         rowKey="id"
         loading={isLoading}
         sortable
@@ -233,7 +240,7 @@ export default function ApplicationControl() {
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
         onRowClick={handleRowClick}
-        emptyMessage="No application control events found"
+        emptyMessage="No device control events found"
         smartActions={[
           {
             id: 'view',
@@ -265,7 +272,7 @@ export default function ApplicationControl() {
               }}
             >
               <Typography variant="subtitle1" fontWeight={600}>
-                Event Details - {detailPanel.row.applicationName}
+                Event Details - {detailPanel.row.eventId}
               </Typography>
               <IconButton size="small" onClick={handleCloseDetailPanel}>
                 <CloseOutlined fontSize="small" />
@@ -274,26 +281,34 @@ export default function ApplicationControl() {
             <Box sx={{ p: 2 }}>
               <Grid container spacing={3}>
                 {/* Event Summary */}
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={6} lg={3}>
                   <DetailSection
                     title="Event Summary"
                     data={detailPanel.data.eventSummary as unknown as Record<string, string>}
                   />
                 </Grid>
 
-                {/* Application Attributes */}
-                <Grid item xs={12} md={4}>
+                {/* File Attributes */}
+                <Grid item xs={12} md={6} lg={3}>
                   <DetailSection
-                    title="Application Attributes"
-                    data={detailPanel.data.applicationAttributes as unknown as Record<string, string>}
+                    title="File Attributes"
+                    data={detailPanel.data.fileAttributes as unknown as Record<string, string>}
                   />
                 </Grid>
 
                 {/* User Details */}
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={6} lg={3}>
                   <DetailSection
                     title="User Details"
                     data={detailPanel.data.userDetails as unknown as Record<string, string>}
+                  />
+                </Grid>
+
+                {/* DLP Details */}
+                <Grid item xs={12} md={6} lg={3}>
+                  <DetailSection
+                    title="DLP Details"
+                    data={detailPanel.data.dlpDetails as unknown as Record<string, string>}
                   />
                 </Grid>
               </Grid>
