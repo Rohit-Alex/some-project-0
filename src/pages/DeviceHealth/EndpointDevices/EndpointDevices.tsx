@@ -256,7 +256,7 @@ export default function EndpointDevices() {
         selectedRows={selectedRows}
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
-        // onRowClick={handleRowClick}
+        onRowClick={handleRowClick}
         emptyMessage="No endpoint devices found"
         smartActions={[
           {
