@@ -232,7 +232,7 @@ export default function ApplicationControl() {
         selectedRows={selectedRows}
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
-        // onRowClick={handleRowClick}
+        onRowClick={handleRowClick}
         emptyMessage="No application control events found"
         smartActions={[
           {

@@ -240,7 +240,7 @@ export default function DeviceControl() {
         selectedRows={selectedRows}
         onSelectionChange={handleSelectionChange}
         maxSelection={5}
-        // onRowClick={handleRowClick}
+        onRowClick={handleRowClick}
         emptyMessage="No device control events found"
         smartActions={[
           {
