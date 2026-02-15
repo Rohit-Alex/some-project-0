@@ -70,7 +70,7 @@ export function useLogin() {
                 },
             }));
 
-            navigate(ROUTES.DASHBOARD);
+            navigate(ROUTES.DASHBOARD_DEVICE_CONTROL);
         },
 
         onError: (error) => {
