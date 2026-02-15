@@ -8,7 +8,7 @@ export default function GuestGuard(): ReactNode {
   const isAuthenticated = useIsAuthenticated()
 
   if (isAuthenticated) {
-    return <Navigate to={ROUTES.DASHBOARD} replace />
+    return <Navigate to={ROUTES.DASHBOARD_DEVICE_CONTROL} replace />
   }
 
   return <Outlet />
