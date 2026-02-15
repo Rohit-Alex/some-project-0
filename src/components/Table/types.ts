@@ -127,5 +127,7 @@ export interface TableProps<T> {
   filterValues?: FilterValues
   /** Filter change handler */
   onFilterChange?: (columnId: string, value: string | string[] | { start?: string; end?: string }) => void
+  /** Callback when a row is clicked (lowest priority after checkbox and cell click) */
+  onRowClick?: (row: T, rowIndex: number) => void
 }
 
