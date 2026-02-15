@@ -6,7 +6,7 @@ import { AuthGuard, GuestGuard } from '@components/guards';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 // Auth Pages
-import { Login, Signup, ForgotPassword, Dashboard, CheckMail } from '@/pages';
+import { Login, Signup, ForgotPassword, CheckMail } from '@/pages';
 
 // Event Pages
 import {
@@ -39,7 +39,7 @@ const dynamicRoutes = NAVIGABLE_ROUTES.map((route) => ({
 const router = createBrowserRouter([  
     {
         path: ROUTES.ROOT,
-        element: <Navigate to={ROUTES.DASHBOARD} replace />,
+        element: <Navigate to={ROUTES.DASHBOARD_DEVICE_CONTROL} replace />,
     },
 
     // Guest routes (only accessible when NOT logged in)
@@ -72,10 +72,6 @@ const router = createBrowserRouter([
             {
                 element: <MainLayout />,
                 children: [
-                    {
-                        path: ROUTES.DASHBOARD,
-                        element: <Dashboard />,
-                    },
                     {
                         path: "profile",
                         element: <ProfileLayout />,

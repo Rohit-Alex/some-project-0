@@ -346,7 +346,6 @@ export const ROUTES = {
     LOGOUT: '/logout',
 
     // Protected - Main
-    DASHBOARD: '/dashboard',
     PROFILE: '/profile/view',
     PROFILE_EDIT: '/profile/edit',
     SETTINGS: '/settings',
