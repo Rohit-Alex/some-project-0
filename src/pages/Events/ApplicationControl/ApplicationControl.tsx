@@ -1,77 +1,23 @@
 import { useState, useMemo, useCallback } from 'react'
 import Typography from '@mui/material/Typography'
 import Paper from '@mui/material/Paper'
-import Collapse from '@mui/material/Collapse'
-import IconButton from '@mui/material/IconButton'
-import Grid from '@mui/material/Grid'
-import Box from '@mui/material/Box'
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined'
 import ComputerOutlined from '@mui/icons-material/ComputerOutlined'
 import BlockOutlined from '@mui/icons-material/BlockOutlined'
 import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined'
 import EventNoteOutlined from '@mui/icons-material/EventNoteOutlined'
-import CloseOutlined from '@mui/icons-material/CloseOutlined'
 
 import Table from '@components/Table/Table'
 import TimeRangeFilter from '@components/TimeRangeFilter'
 import TableToolbar from '@components/TableToolbar'
+import DetailPanel from '@components/DetailPanel'
+import type { DetailSection } from '@components/DetailPanel'
 import { useTableParams } from '@hooks/useTableParams'
 import { useApplicationControlEvents, useExportApplicationControlEvents } from './hooks'
 import { APPLICATION_CONTROL_COLUMNS, ROWS_PER_PAGE_OPTIONS } from './constants'
 import { getDateRangeFromTimeRange, filtersToApiParams } from './helpers'
 import { getMockAppEventDetail } from './mockedData'
 import type { ApplicationControlFilters, ApplicationControlEvent, AppEventDetail } from './types'
-
-// Detail section component
-interface DetailSectionProps {
-  title: string
-  data: Record<string, string | undefined>
-}
-
-function DetailSection({ title, data }: DetailSectionProps) {
-  return (
-    <Box>
-      <Typography
-        variant="subtitle2"
-        fontWeight={700}
-        sx={{
-          mb: 1.5,
-          pb: 0.5,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        {title}
-      </Typography>
-      <Grid container spacing={1}>
-        {Object.entries(data).map(([key, value]) => (
-          <Grid size={{ xs:12, sm:6 }} key={key}>
-            <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ minWidth: 140, fontWeight: 600 }}
-              >
-                {formatLabel(key)}
-              </Typography>
-              <Typography variant="caption" sx={{ wordBreak: 'break-word' }}>
-                {value || '-'}
-              </Typography>
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-  )
-}
-
-// Format camelCase to readable label
-function formatLabel(key: string): string {
-  return key
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (str) => str.toUpperCase())
-    .trim()
-}
 
 export default function ApplicationControl() {
   const [selectedRows, setSelectedRows] = useState<(string | number)[]>([])
@@ -150,6 +96,15 @@ export default function ApplicationControl() {
   }
 
   const stats = data?.stats
+
+  // Build detail sections from data
+  const detailSections: DetailSection[] = detailPanel?.data
+    ? [
+      { title: 'Event Summary', data: detailPanel.data.eventSummary as unknown as Record<string, string> },
+      { title: 'Application Attributes', data: detailPanel.data.applicationAttributes as unknown as Record<string, string> },
+      { title: 'User Details', data: detailPanel.data.userDetails as unknown as Record<string, string> },
+    ]
+    : []
 
   return (
     <div className="flex flex-col gap-4">
@@ -249,58 +204,12 @@ export default function ApplicationControl() {
       />
 
       {/* Detail Panel */}
-      <Collapse in={!!detailPanel}>
-        {detailPanel && (
-          <Paper elevation={0} className="border border-gray-200 dark:border-gray-700">
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                px: 2,
-                py: 1.5,
-                borderBottom: 1,
-                borderColor: 'divider',
-                bgcolor: 'action.hover',
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight={600}>
-                Event Details - {detailPanel.row.applicationName}
-              </Typography>
-              <IconButton size="small" onClick={handleCloseDetailPanel}>
-                <CloseOutlined fontSize="small" />
-              </IconButton>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Grid container spacing={3}>
-                {/* Event Summary */}
-                <Grid size={{ xs:12, md:4 }}>
-                  <DetailSection
-                    title="Event Summary"
-                    data={detailPanel.data.eventSummary as unknown as Record<string, string>}
-                  />
-                </Grid>
-
-                {/* Application Attributes */}
-                <Grid size={{ xs:12, md:4 }}>
-                  <DetailSection
-                    title="Application Attributes"
-                    data={detailPanel.data.applicationAttributes as unknown as Record<string, string>}
-                  />
-                </Grid>
-
-                {/* User Details */}
-                <Grid size={{ xs:12, md:4 }}>
-                  <DetailSection
-                    title="User Details"
-                    data={detailPanel.data.userDetails as unknown as Record<string, string>}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-          </Paper>
-        )}
-      </Collapse>
+      <DetailPanel
+        open={!!detailPanel}
+        title={`Event Details - ${detailPanel?.row.applicationName ?? ''}`}
+        sections={detailSections}
+        onClose={handleCloseDetailPanel}
+      />
     </div>
   )
 }
