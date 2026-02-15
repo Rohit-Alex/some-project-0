@@ -1,11 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import Typography from '@mui/material/Typography'
 import Paper from '@mui/material/Paper'
-import Collapse from '@mui/material/Collapse'
-import IconButton from '@mui/material/IconButton'
-import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
-import Link from '@mui/material/Link'
 import TextField from '@mui/material/TextField'
 import InputAdornment from '@mui/material/InputAdornment'
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined'
@@ -13,75 +9,19 @@ import ComputerOutlined from '@mui/icons-material/ComputerOutlined'
 import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined'
 import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined'
 import DevicesOutlined from '@mui/icons-material/DevicesOutlined'
-import CloseOutlined from '@mui/icons-material/CloseOutlined'
 import SearchOutlined from '@mui/icons-material/SearchOutlined'
 
 import Table from '@components/Table/Table'
 import TimeRangeFilter from '@components/TimeRangeFilter'
 import TableToolbar from '@components/TableToolbar'
+import DetailPanel from '@components/DetailPanel'
+import type { DetailSection } from '@components/DetailPanel'
 import { useTableParams } from '@hooks/useTableParams'
 import { useEndpointDevices, useExportEndpointDevices } from './hooks'
 import { ENDPOINT_DEVICE_COLUMNS, ROWS_PER_PAGE_OPTIONS, INSTALLED_APP_COLUMNS } from './constants'
 import { getDateRangeFromTimeRange, filtersToApiParams } from './helpers'
 import { getMockDeviceDetail } from './mockedData'
 import type { EndpointDeviceFilters, EndpointDevice, EndpointDeviceDetail, InstalledApplication } from './types'
-
-// Detail section component
-interface DetailSectionProps {
-  title: string
-  data: Record<string, string | undefined>
-}
-
-function DetailSection({ title, data }: DetailSectionProps) {
-  return (
-    <Box>
-      <Typography
-        variant="subtitle2"
-        fontWeight={700}
-        sx={{
-          mb: 1.5,
-          pb: 0.5,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        {title}
-      </Typography>
-      <Grid container spacing={1}>
-        {Object.entries(data).map(([key, value]) => (
-          <Grid size={{ xs:12 }} key={key}>
-            <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ minWidth: 160, fontWeight: 600 }}
-              >
-                {formatLabel(key)}
-              </Typography>
-              <Typography variant="caption" sx={{ wordBreak: 'break-word' }}>
-                {key.toLowerCase().includes('link') || key.toLowerCase().includes('download') ? (
-                  <Link href="#" underline="hover">
-                    {value || '-'}
-                  </Link>
-                ) : (
-                  value || '-'
-                )}
-              </Typography>
-            </Box>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-  )
-}
-
-// Format camelCase to readable label
-function formatLabel(key: string): string {
-  return key
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (str) => str.toUpperCase())
-    .trim()
-}
 
 export default function EndpointDevices() {
   const [selectedRows, setSelectedRows] = useState<(string | number)[]>([])
@@ -174,6 +114,15 @@ export default function EndpointDevices() {
         app.applicationType.toLowerCase().includes(searchLower)
     )
   }, [detailPanel?.data.installedApplications, appSearchFilter])
+
+  // Build detail sections from data
+  const detailSections: DetailSection[] = detailPanel?.data
+    ? [
+      { title: 'System Details', data: detailPanel.data.systemDetails as unknown as Record<string, string> },
+      { title: 'Agent Details', data: detailPanel.data.agentDetails as unknown as Record<string, string> },
+      { title: 'Domain Details', data: detailPanel.data.domainDetails as unknown as Record<string, string> },
+    ]
+    : []
 
   return (
     <div className="flex flex-col gap-4">
@@ -273,102 +222,51 @@ export default function EndpointDevices() {
       />
 
       {/* Detail Panel */}
-      <Collapse in={!!detailPanel}>
-        {detailPanel && (
-          <Paper elevation={0} className="border border-gray-200 dark:border-gray-700">
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                px: 2,
-                py: 1.5,
-                borderBottom: 1,
-                borderColor: 'divider',
-                bgcolor: 'action.hover',
+      <DetailPanel
+        open={!!detailPanel}
+        title={`Device Details - ${detailPanel?.row.hostname ?? ''}`}
+        sections={detailSections}
+        onClose={handleCloseDetailPanel}
+      >
+        {/* Installed Applications Table */}
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 1.5,
+            }}
+          >
+            <Typography variant="subtitle2" fontWeight={700}>
+              List of Applications Installed
+            </Typography>
+            <TextField
+              size="small"
+              placeholder="Search applications..."
+              value={appSearchFilter}
+              onChange={(e) => setAppSearchFilter(e.target.value)}
+              sx={{ width: 250 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlined fontSize="small" />
+                  </InputAdornment>
+                ),
               }}
-            >
-              <Typography variant="subtitle1" fontWeight={600}>
-                Device Details - {detailPanel.row.hostname}
-              </Typography>
-              <IconButton size="small" onClick={handleCloseDetailPanel}>
-                <CloseOutlined fontSize="small" />
-              </IconButton>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <Grid container spacing={3}>
-                {/* System Details */}
-                <Grid size={{ xs:12, md:6, lg:3 }}>
-                  <DetailSection
-                    title="System Details"
-                    data={detailPanel.data.systemDetails as unknown as Record<string, string>}
-                  />
-                </Grid>
-
-                {/* Agent Details */}
-                <Grid size={{ xs:12, md:6, lg:3 }}>
-                  <DetailSection
-                    title="Agent Details"
-                    data={detailPanel.data.agentDetails as unknown as Record<string, string>}
-                  />
-                </Grid>
-
-                {/* Domain Details */}
-                <Grid size={{ xs:12, md:6, lg:3 }}>
-                  <DetailSection
-                    title="Domain Details"
-                    data={detailPanel.data.domainDetails as unknown as Record<string, string>}
-                  />
-                </Grid>
-
-                {/* List of Applications Installed */}
-                <Grid size={{ xs:12, md:6, lg:3 }}>
-                  <Box>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 1.5,
-                        pb: 0.5,
-                        borderBottom: 1,
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        List of Applications Installed
-                      </Typography>
-                    </Box>
-                    <TextField
-                      size="small"
-                      placeholder="Search Filter"
-                      value={appSearchFilter}
-                      onChange={(e) => setAppSearchFilter(e.target.value)}
-                      sx={{ mb: 1, width: '100%' }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchOutlined fontSize="small" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                    <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
-                      <Table
-                        data={filteredApps}
-                        columns={INSTALLED_APP_COLUMNS}
-                        rowKey="id"
-                        dense
-                        stickyHeader={false}
-                      />
-                    </Box>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Box>
-          </Paper>
-        )}
-      </Collapse>
+            />
+          </Box>
+          <Box sx={{ maxHeight: 250, overflow: 'auto' }}>
+            <Table
+              data={filteredApps}
+              columns={INSTALLED_APP_COLUMNS}
+              rowKey="id"
+              dense
+              stickyHeader
+            />
+          </Box>
+        </Box>
+      </DetailPanel>
     </div>
   )
 }
