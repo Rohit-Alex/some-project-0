@@ -30,15 +30,17 @@ export default function AuthLoginForm(): ReactNode {
     const [loginType, setLoginType] = useState<LoginType>("USER_ID")
     const [checked, setChecked] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+
 
     const handleTabChange = (_: React.SyntheticEvent, newValue: LoginType) => {
         setLoginType(newValue)
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        
+        e.preventDefault();        
+
         const typeMap: Record<string, string> = {
             USER_ID: "username",
             DOMAIN: "domain",
@@ -46,8 +48,8 @@ export default function AuthLoginForm(): ReactNode {
         };
 
         login({
-            username: (formData.get("username") as string).trim(),
-            password: formData.get("password") as string,
+            username: username.trim(),
+            password,
             login_type: typeMap[loginType]
         });
     };
@@ -59,6 +61,9 @@ export default function AuthLoginForm(): ReactNode {
             default: return "User ID"
         }
     };
+
+    const isSubmitDisabled =
+        !username.trim() || !password.trim() || isPending;
 
     return (
         <Box sx={{ width: '100%' }}>
@@ -73,14 +78,14 @@ export default function AuthLoginForm(): ReactNode {
                     <Grid size={12}>
                         <div className="flex flex-col gap-1">
                             <InputLabel htmlFor="username">{getUsernameLabel()}</InputLabel>
-                            <OutlinedInput id="username" type="text" name="username" placeholder={`Enter ${getUsernameLabel()}`} fullWidth />
+                            <OutlinedInput id="username" type="text" name="username" placeholder={`Enter ${getUsernameLabel()}`} fullWidth value={username} onChange={(e) => setUsername(e.target.value)} />
                         </div>
                     </Grid>
 
                     <Grid size={12}>
                         <div className="flex flex-col gap-1">
                             <InputLabel htmlFor="password-login">Password</InputLabel>
-                            <OutlinedInput fullWidth  placeholder="Enter password" id="password-login" type={showPassword ? 'text' : 'password'} name="password"
+                            <OutlinedInput fullWidth placeholder="Enter password" id="password-login" type={showPassword ? 'text' : 'password'} name="password" value={password} onChange={(e) => setPassword(e.target.value)}
                                 endAdornment={
                                     <InputAdornment position="end">
                                         <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
@@ -112,7 +117,7 @@ export default function AuthLoginForm(): ReactNode {
                     )}
 
                     <Grid size={12}>
-                        <Button disableElevation disabled={isPending} fullWidth size="large" type="submit" variant="contained">
+                        <Button disableElevation disabled={isSubmitDisabled} fullWidth size="large" type="submit" variant="contained">
                             {isPending ? "Logging in..." : "Login"}
                         </Button>
                     </Grid>
