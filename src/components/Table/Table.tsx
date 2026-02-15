@@ -47,6 +47,7 @@ export default function Table<T>({
   onFilterChange,
   maxSelection,
   onCellClick,
+  onRowClick,
 }: TableProps<T>): ReactNode {
   // Get row key
   const getRowKey = (row: T): string | number => {
@@ -169,6 +170,30 @@ export default function Table<T>({
     return {}
   }
 
+  // Row click handler with priority: checkbox > cell click > row click
+  const handleRowClick = (
+    row: T,
+    rowIndex: number,
+    event: React.MouseEvent<HTMLTableRowElement>
+  ) => {
+    // Check if click was on checkbox or clickable cell - these are handled separately
+    const target = event.target as HTMLElement
+    const isCheckbox = target.closest('input[type="checkbox"]') || target.closest('.MuiCheckbox-root')
+    const isClickableCell = target.closest('[data-clickable="true"]')
+    const isSmartAction = target.closest('[data-smart-actions="true"]')
+
+    // Don't fire row click if it was checkbox, clickable cell, or smart action
+    if (isCheckbox || isClickableCell || isSmartAction) {
+      return
+    }
+
+    // Fire row click
+    onRowClick?.(row, rowIndex)
+  }
+
+  // Check if row is interactive (selectable or clickable)
+  const isRowInteractive = selectable || onRowClick
+
   return (
     <Paper elevation={elevation} className={className}>
       <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined }}>
@@ -285,10 +310,24 @@ export default function Table<T>({
                 const selected = isSelected(row)
                 return (
                   <TableRow
-                    key={getRowKey(row)}                    
+                    key={getRowKey(row)}
+                    hover={!!isRowInteractive}
                     selected={selected}
-                    classes={{ selected: '!bg-transparent' }}                    
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    onClick={onRowClick ? (e: React.MouseEvent<HTMLTableRowElement>) => handleRowClick(row, rowIndex, e) : undefined}
+                    classes={{ selected: '!bg-transparent' }}
+                    sx={{
+                      '&:last-child td, &:last-child th': { border: 0 },
+                      ...(isRowInteractive && {
+                        cursor: 'pointer',
+                        transition: 'background-color 0.15s ease-in-out',
+                      }),
+                      ...(selected && {
+                        bgcolor: 'action.selected',
+                        '&:hover': {
+                          bgcolor: 'action.selected',
+                        },
+                      }),
+                    }}
                   >
                     {/* Row checkbox */}
                     {selectable && (
@@ -315,6 +354,7 @@ export default function Table<T>({
                       <TableCell
                         key={column.id}
                         align={column.align ?? 'left'}
+                        data-clickable={column.clickable && onCellClick ? 'true' : undefined}
                         onClick={
                           column.clickable && onCellClick
                             ? () => onCellClick(column.id, row, rowIndex)
@@ -333,6 +373,7 @@ export default function Table<T>({
                     {smartActions && (
                       <TableCell
                         align="center"
+                        data-smart-actions="true"
                         sx={{
                           position: 'sticky',
                           right: 0,
