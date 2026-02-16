@@ -1,410 +1,296 @@
-import type { ReactNode } from 'react'
-import MuiTable from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
-import TablePagination from '@mui/material/TablePagination'
-import TableSortLabel from '@mui/material/TableSortLabel'
-import Checkbox from '@mui/material/Checkbox'
-import Paper from '@mui/material/Paper'
-import Skeleton from '@mui/material/Skeleton'
-import Typography from '@mui/material/Typography'
-import Box from '@mui/material/Box'
-import SmartActionsCell from './SmartActionsCell'
-import ColumnFilterCell from './ColumnFilterCell'
-import type { TableProps, Column, SortDirection } from './types'
+import type { ReactNode } from 'react';
+import SmartActionsCell from './SmartActionsCell';
+import ColumnFilterCell from './ColumnFilterCell';
+import type { TableProps, Column, SortDirection } from './types';
+import { Table as MuiTable, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, TableSortLabel, Checkbox, Paper, Skeleton, Typography, Box } from '@mui/material';
 
 export default function Table<T>({
-  data,
-  columns,
-  rowKey,
-  loading = false,
-  selectable = false,
-  selectedRows = [],
-  onSelectionChange,
-  sortable = false,
-  sortBy,
-  sortDirection = 'asc',
-  onSortChange,
-  stickyHeader = true,
-  maxHeight = 600,
-  pagination = false,
-  page = 0,
-  rowsPerPage = 10,
-  totalRows,
-  onPageChange,
-  onRowsPerPageChange,
-  rowsPerPageOptions = [10, 25, 50, 100],
-  smartActions,
-  emptyMessage = 'No data available',
-  dense = false,
-  elevation = 0,
-  className,
-  filterable = false,
-  filterValues = {},
-  onFilterChange,
-  maxSelection,
-  onCellClick,
-  onRowClick,
+    data, columns, rowKey, loading = false, selectable = false, selectedRows = [], onSelectionChange, sortable = false,
+    sortBy, sortDirection = 'asc', onSortChange, stickyHeader = true, maxHeight = 600, pagination = false, page = 0,
+    rowsPerPage = 10, totalRows, onPageChange, onRowsPerPageChange, rowsPerPageOptions = [10, 25, 50, 100], smartActions,
+    emptyMessage = 'No data available', dense = false, elevation = 0, className, filterable = false, filterValues = {},
+    onFilterChange, maxSelection, onCellClick, onRowClick,
 }: TableProps<T>): ReactNode {
-  // Get row key
-  const getRowKey = (row: T): string | number => {
-    if (typeof rowKey === 'function') {
-      return rowKey(row)
-    }
-    return row[rowKey] as string | number
-  }
+    const getRowKey = (row: T): string | number => {
+        if (typeof rowKey === 'function') {
+            return rowKey(row);
+        }
+        return row[rowKey] as string | number;
+    };
 
-  // Get cell value
-  const getCellValue = (row: T, column: Column<T>): ReactNode => {
-    if (column.render) {
-      const rawValue = typeof column.accessor === 'function'
-        ? column.accessor(row)
-        : row[column.accessor]
-      return column.render(rawValue, row, data.indexOf(row))
-    }
+    const getCellValue = (row: T, column: Column<T>): ReactNode => {
+        if (column.render) {
+            const rawValue = typeof column.accessor === 'function' ? column.accessor(row) : row[column.accessor];
+            return column.render(rawValue, row, data.indexOf(row));
+        }
 
-    if (typeof column.accessor === 'function') {
-      return column.accessor(row)
-    }
+        if (typeof column.accessor === 'function') {
+            return column.accessor(row);
+        }
 
-    return row[column.accessor] as ReactNode
-  }
+        return row[column.accessor] as ReactNode;
+    };
 
+    const isSelected = (row: T): boolean => {
+        return selectedRows.includes(getRowKey(row));
+    };
 
-  const isSelected = (row: T): boolean => {
-    return selectedRows.includes(getRowKey(row))
-  }
+    const isAllSelected = data.length > 0 && selectedRows.length === data.length;
+    const isIndeterminate = selectedRows.length > 0 && selectedRows.length < data.length;
 
-  const isAllSelected = data.length > 0 && selectedRows.length === data.length
-  const isIndeterminate = selectedRows.length > 0 && selectedRows.length < data.length
+    const handleSelectAll = () => {
+        if (isAllSelected) {
+            onSelectionChange?.([]);
+        } else {
+            // Respect maxSelection when selecting all
+            const allKeys = data.map(getRowKey);
+            const keysToSelect = maxSelection ? allKeys.slice(0, maxSelection) : allKeys;
+            onSelectionChange?.(keysToSelect);
+        }
+    };
 
-  const handleSelectAll = () => {
-    if (isAllSelected) {
-      onSelectionChange?.([])
-    } else {
-      // Respect maxSelection when selecting all
-      const allKeys = data.map(getRowKey)
-      const keysToSelect = maxSelection ? allKeys.slice(0, maxSelection) : allKeys
-      onSelectionChange?.(keysToSelect)
-    }
-  }
+    const handleSelectRow = (row: T) => {
+        const key = getRowKey(row);
+        if (isSelected(row)) {
+            onSelectionChange?.(selectedRows.filter((k) => k !== key));
+        } else {
+            // Check max selection limit
+            if (maxSelection && selectedRows.length >= maxSelection) {
+                return; // Don't allow more selections
+            }
+            onSelectionChange?.([...selectedRows, key]);
+        }
+    };
 
-  const handleSelectRow = (row: T) => {
-    const key = getRowKey(row)
-    if (isSelected(row)) {
-      onSelectionChange?.(selectedRows.filter((k) => k !== key))
-    } else {
-      // Check max selection limit
-      if (maxSelection && selectedRows.length >= maxSelection) {
-        return // Don't allow more selections
-      }
-      onSelectionChange?.([...selectedRows, key])
-    }
-  }
+    // Check if selection is at max
+    const isMaxSelected = maxSelection ? selectedRows.length >= maxSelection : false;
 
-  // Check if selection is at max
-  const isMaxSelected = maxSelection ? selectedRows.length >= maxSelection : false
+    // Sort handler
+    const handleSort = (columnId: string) => {
+        const newDirection: SortDirection = sortBy === columnId && sortDirection === 'asc' ? 'desc' : 'asc';
+        onSortChange?.(columnId, newDirection);
+    };
 
-  // Sort handler
-  const handleSort = (columnId: string) => {
-    const newDirection: SortDirection = sortBy === columnId && sortDirection === 'asc' ? 'desc' : 'asc'
-    onSortChange?.(columnId, newDirection)
-  }
+    // Pagination handlers
+    const handlePageChange = (_: unknown, newPage: number) => {
+        onPageChange?.(newPage);
+    };
 
-  // Pagination handlers
-  const handlePageChange = (_: unknown, newPage: number) => {
-    onPageChange?.(newPage)
-  }
+    const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        onRowsPerPageChange?.(parseInt(event.target.value, 10));
+        onPageChange?.(0);
+    };
 
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onRowsPerPageChange?.(parseInt(event.target.value, 10))
-    onPageChange?.(0)
-  }
+    // Calculate total rows
+    const total = totalRows ?? data.length;
 
-  // Calculate total rows
-  const total = totalRows ?? data.length
+    // Skeleton rows for loading
+    const skeletonRows = Array.from({ length: rowsPerPage }, (_, i) => i);
 
-  // Skeleton rows for loading
-  const skeletonRows = Array.from({ length: rowsPerPage }, (_, i) => i)
+    // Sticky column styles
+    const getStickyStyles = (column: Column<T>, isHeader = false) => {
+        const baseStyles = {
+            bgcolor: 'background.paper',
+        };
 
-  // Sticky column styles
-  const getStickyStyles = (column: Column<T>, isHeader = false) => {
-    const baseStyles = {
-      bgcolor: 'background.paper',
-    }
+        if (column.sticky === 'left') {
+            return {
+                ...baseStyles,
+                position: 'sticky' as const,
+                left: selectable ? 42 : 0,
+                zIndex: isHeader ? 3 : 2,
+            }
+        }
+        if (column.sticky === 'right') {
+            return {
+                ...baseStyles,
+                position: 'sticky' as const,
+                right: smartActions ? 48 : 0,
+                zIndex: isHeader ? 3 : 2,
+            }
+        }
+        return {};
+    };
 
-    if (column.sticky === 'left') {
-      return {
-        ...baseStyles,
-        position: 'sticky' as const,
-        left: selectable ? 42 : 0,
-        zIndex: isHeader ? 3 : 2,
-      }
-    }
-    if (column.sticky === 'right') {
-      return {
-        ...baseStyles,
-        position: 'sticky' as const,
-        right: smartActions ? 48 : 0,
-        zIndex: isHeader ? 3 : 2,
-      }
-    }
-    return {}
-  }
+    // Clickable cell styles
+    const getClickableCellStyles = (column: Column<T>) => {
+        if (column.clickable && onCellClick) {
+            return {
+                cursor: 'pointer',
+                color: 'primary.main',
+                '&:hover': {
+                    bgcolor: 'action.hover',
+                    textDecoration: 'underline',
+                },
+            }
+        }
+        return {};
+    };
 
-  // Clickable cell styles
-  const getClickableCellStyles = (column: Column<T>) => {
-    if (column.clickable && onCellClick) {
-      return {
-        cursor: 'pointer',
-        color: 'primary.main',
-        '&:hover': {
-          bgcolor: 'action.hover',
-          textDecoration: 'underline',
-        },
-      }
-    }
-    return {}
-  }
+    // Row click handler with priority: checkbox > cell click > row click
+    const handleRowClick = (row: T, rowIndex: number, event: React.MouseEvent<HTMLTableRowElement>) => {
+        // Check if click was on checkbox or clickable cell - these are handled separately
+        const target = event.target as HTMLElement;
+        const isCheckbox = target.closest('input[type="checkbox"]') || target.closest('.MuiCheckbox-root');
+        const isClickableCell = target.closest('[data-clickable="true"]');
+        const isSmartAction = target.closest('[data-smart-actions="true"]');
 
-  // Row click handler with priority: checkbox > cell click > row click
-  const handleRowClick = (
-    row: T,
-    rowIndex: number,
-    event: React.MouseEvent<HTMLTableRowElement>
-  ) => {
-    // Check if click was on checkbox or clickable cell - these are handled separately
-    const target = event.target as HTMLElement
-    const isCheckbox = target.closest('input[type="checkbox"]') || target.closest('.MuiCheckbox-root')
-    const isClickableCell = target.closest('[data-clickable="true"]')
-    const isSmartAction = target.closest('[data-smart-actions="true"]')
+        // Don't fire row click if it was checkbox, clickable cell, or smart action
+        if (isCheckbox || isClickableCell || isSmartAction) {
+            return;
+        }
 
-    // Don't fire row click if it was checkbox, clickable cell, or smart action
-    if (isCheckbox || isClickableCell || isSmartAction) {
-      return
-    }
+        // Fire row click
+        onRowClick?.(row, rowIndex);
+    };
 
-    // Fire row click
-    onRowClick?.(row, rowIndex)
-  }
+    // Check if row is interactive (selectable or clickable)
+    const isRowInteractive = selectable || onRowClick;
 
-  // Check if row is interactive (selectable or clickable)
-  const isRowInteractive = selectable || onRowClick
+    return (
+        <Paper elevation={elevation} className={className}>
+            {/* <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined }}> */}
+            <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined, minWidth: 0, width: '100%', overflowX: 'auto', '& .MuiTable-root': { width: '100%', minWidth: 0, tableLayout: 'fixed' } }}>
+                <MuiTable stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'}>
+                    <TableHead>
+                        <TableRow>              
+                            {selectable && (
+                                <TableCell padding="checkbox" sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 4 }}>
+                                    <Checkbox indeterminate={isIndeterminate} checked={isAllSelected} onChange={handleSelectAll} slotProps={{ input: { 'aria-label': 'select all' } }} />
+                                </TableCell>
+                            )}
 
-  return (
-    <Paper elevation={elevation} className={className}>
-      <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined }}>
-        <MuiTable stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'}>
-          <TableHead>
-            <TableRow>              
-              {selectable && (
-                <TableCell
-                  padding="checkbox"
-                  sx={{
-                    position: 'sticky',
-                    left: 0,
-                    bgcolor: 'background.paper',
-                    zIndex: 4,
-                  }}
-                >
-                  <Checkbox
-                    indeterminate={isIndeterminate}
-                    checked={isAllSelected}
-                    onChange={handleSelectAll}
-                    slotProps={{ input: { 'aria-label': 'select all' } }}
-                  />
-                </TableCell>
-              )}
+                            {columns.map((column) => (
+                                <TableCell key={column.id} align={column.align ?? 'left'} sx={{ minWidth: column.minWidth, width: column.width, ...getStickyStyles(column, true)}}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        {sortable && column.sortable !== false ? (
+                                            <TableSortLabel active={sortBy === column.id} direction={sortBy === column.id ? sortDirection : 'asc'} onClick={() => handleSort(column.id)}>
+                                                {column.label}
+                                            </TableSortLabel>
+                                        ) : (
+                                            column.label
+                                        )}
 
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align ?? 'left'}
-                  sx={{
-                    minWidth: column.minWidth,
-                    width: column.width,
-                    ...getStickyStyles(column, true),
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    {sortable && column.sortable !== false ? (
-                      <TableSortLabel
-                        active={sortBy === column.id}
-                        direction={sortBy === column.id ? sortDirection : 'asc'}
-                        onClick={() => handleSort(column.id)}
-                      >
-                        {column.label}
-                      </TableSortLabel>
-                    ) : (
-                      column.label
-                    )}
-                    {filterable && column.filter && onFilterChange && (
-                      <ColumnFilterCell
-                        columnId={column.id}
-                        filter={column.filter}
-                        value={filterValues[column.id]}
-                        onChange={onFilterChange}
-                      />
-                    )}
-                  </Box>
-                </TableCell>
-              ))}
+                                        {filterable && column.filter && onFilterChange && (
+                                            <ColumnFilterCell columnId={column.id} filter={column.filter} value={filterValues[column.id]} onChange={onFilterChange} />
+                                        )}
+                                    </Box>
+                                </TableCell>
+                            ))}
 
-              {/* Smart actions header */}
-              {smartActions && (
-                <TableCell
-                  align="center"
-                  sx={{
-                    position: 'sticky',
-                    right: 0,
-                    bgcolor: 'background.paper',
-                    zIndex: 4,
-                    width: 48,
-                  }}
-                >
-                  Actions
-                </TableCell>
-              )}
-            </TableRow>
-          </TableHead>
+                            {/* Smart actions header */}
+                            {smartActions && (
+                                <TableCell align="center" sx={{ position: 'sticky', right: 0, bgcolor: 'background.paper', zIndex: 4, width: 48 }}>
+                                    Actions
+                                </TableCell>
+                            )}
+                        </TableRow>
+                    </TableHead>
 
-          <TableBody>
-            {loading ? (
-              // Loading skeleton
-              skeletonRows.map((i) => (
-                <TableRow key={i}>
-                  {selectable && (
-                    <TableCell padding="checkbox">
-                      <Skeleton variant="rectangular" width={20} height={20} />
-                    </TableCell>
-                  )}
-                  {columns.map((column) => (
-                    <TableCell key={column.id}>
-                      <Skeleton variant="text" />
-                    </TableCell>
-                  ))}
-                  {smartActions && (
-                    <TableCell>
-                      <Skeleton variant="circular" width={24} height={24} />
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
-            ) : data.length === 0 ? (
-              // Empty state
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length + (selectable ? 1 : 0) + (smartActions ? 1 : 0)}
-                  align="center"
-                  sx={{ py: 6 }}
-                >
-                  <Typography color="text.secondary">{emptyMessage}</Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              // Data rows
-              data.map((row, rowIndex) => {
-                const selected = isSelected(row)
-                return (
-                  <TableRow
-                    key={getRowKey(row)}
-                    hover={!!isRowInteractive}
-                    selected={selected}
-                    onClick={onRowClick ? (e: React.MouseEvent<HTMLTableRowElement>) => handleRowClick(row, rowIndex, e) : undefined}
-                    classes={{ selected: '!bg-transparent' }}
-                    sx={{
-                      '&:last-child td, &:last-child th': { border: 0 },
-                      ...(isRowInteractive && {
-                        cursor: 'pointer',
-                        transition: 'background-color 0.15s ease-in-out',
-                      }),
-                      ...(selected && {
-                        bgcolor: 'action.selected',
-                        '&:hover': {
-                          bgcolor: 'action.selected',
-                        },
-                      }),
-                    }}
-                  >
-                    {/* Row checkbox */}
-                    {selectable && (
-                      <TableCell
-                        padding="checkbox"
-                        sx={{
-                          position: 'sticky',
-                          left: 0,
-                          bgcolor: 'background.paper',
-                          zIndex: 2,
-                        }}
-                      >
-                        <Checkbox
-                          checked={selected}
-                          disabled={!selected && isMaxSelected}
-                          onChange={() => handleSelectRow(row)}
-                          slotProps={{ input: { 'aria-label': `select row ${rowIndex}` } }}
-                        />
-                      </TableCell>
-                    )}
+                    <TableBody>
+                        {loading ? (
+                            skeletonRows.map((i) => (
+                                <TableRow key={i}>
+                                    {selectable && (
+                                        <TableCell padding="checkbox">
+                                            <Skeleton variant="rectangular" width={20} height={20} />
+                                        </TableCell>
+                                    )}
 
-                    {/* Data cells */}
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        align={column.align ?? 'left'}
-                        data-clickable={column.clickable && onCellClick ? 'true' : undefined}
-                        onClick={
-                          column.clickable && onCellClick
-                            ? () => onCellClick(column.id, row, rowIndex)
-                            : undefined
-                        }
-                        sx={{
-                          ...getStickyStyles(column),
-                          ...getClickableCellStyles(column),
-                        }}
-                      >
-                        {getCellValue(row, column)}
-                      </TableCell>
-                    ))}
+                                    {columns.map((column) => (
+                                        <TableCell key={column.id}>
+                                            <Skeleton variant="text" />
+                                        </TableCell>
+                                    ))}
 
-                    {/* Smart actions cell */}
-                    {smartActions && (
-                      <TableCell
-                        align="center"
-                        data-smart-actions="true"
-                        sx={{
-                          position: 'sticky',
-                          right: 0,
-                          bgcolor: 'background.paper',
-                          zIndex: 2,
-                        }}
-                      >
-                        <SmartActionsCell row={row} rowIndex={rowIndex} actions={smartActions} />
-                      </TableCell>
-                    )}
-                  </TableRow>
-                )
-              })
+                                    {smartActions && (
+                                        <TableCell>
+                                            <Skeleton variant="circular" width={24} height={24} />
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            ))
+                        ) : data.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length + (selectable ? 1 : 0) + (smartActions ? 1 : 0)} align="center" sx={{ py: 6 }}>
+                                    <Typography color="text.secondary">{emptyMessage}</Typography>
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            data.map((row, rowIndex) => {
+                                const selected = isSelected(row)
+                                return (
+                                    <TableRow
+                                        key={getRowKey(row)}
+                                        hover={!!isRowInteractive}
+                                        selected={selected}
+                                        onClick={onRowClick ? (e: React.MouseEvent<HTMLTableRowElement>) => handleRowClick(row, rowIndex, e) : undefined}
+                                        classes={{ selected: '!bg-transparent' }}
+                                        sx={{
+                                            '&:last-child td, &:last-child th': { border: 0 },
+                                            ...(isRowInteractive && {
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.15s ease-in-out',
+                                            }),
+                                            ...(selected && {
+                                                bgcolor: 'action.selected',
+                                                '&:hover': {
+                                                bgcolor: 'action.selected',
+                                                },
+                                            }),
+                                        }}
+                                    >
+                                    {selectable && (
+                                        <TableCell padding="checkbox" sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 2 }}>
+                                            <Checkbox checked={selected} disabled={!selected && isMaxSelected} onChange={() => handleSelectRow(row)} slotProps={{ input: { 'aria-label': `select row ${rowIndex}` } }} />
+                                        </TableCell>
+                                    )}
+
+                                    {/* Data cells */}
+                                    {columns.map((column) => (
+                                        <TableCell
+                                            key={column.id}
+                                            align={column.align ?? 'left'}
+                                            data-clickable={column.clickable && onCellClick ? 'true' : undefined}
+                                            onClick={
+                                                column.clickable && onCellClick ? () => onCellClick(column.id, row, rowIndex) : undefined
+                                            }
+                                            sx={{
+                                                ...getStickyStyles(column),
+                                                ...getClickableCellStyles(column),
+                                            }}
+                                        >
+                                            {getCellValue(row, column)}
+                                        </TableCell>
+                                    ))}
+
+                                    {/* Smart actions cell */}
+                                    {smartActions && (
+                                        <TableCell align="center" data-smart-actions="true" sx={{ position: 'sticky', right: 0, bgcolor: 'background.paper', zIndex: 2 }}>
+                                            <SmartActionsCell row={row} rowIndex={rowIndex} actions={smartActions} />
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                                )
+                            })
+                        )}
+                    </TableBody>
+                </MuiTable>
+            </TableContainer>
+
+            {/* Pagination */}
+            {pagination && (
+                <TablePagination
+                    component="div"
+                    count={total}
+                    page={page}
+                    rowsPerPage={rowsPerPage}
+                    rowsPerPageOptions={rowsPerPageOptions}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                />
             )}
-          </TableBody>
-        </MuiTable>
-      </TableContainer>
-
-      {/* Pagination */}
-      {pagination && (
-        <TablePagination
-          component="div"
-          count={total}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={rowsPerPageOptions}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-        />
-      )}
-    </Paper>
-  )
-}
+        </Paper>
+    );
+};
 

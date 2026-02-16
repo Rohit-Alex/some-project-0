@@ -1,1 +1,1 @@
-export { default as EndpointDevices } from './EndpointDevices'
+export { default as EndpointDevices } from './EndpointDevices';
