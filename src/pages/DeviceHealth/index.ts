@@ -1,1 +1,1 @@
-export * from './EndpointDevices'
+export * from './EndpointDevices';
