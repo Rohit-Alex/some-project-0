@@ -13,6 +13,7 @@ const generateMockDevices = (count: number): EndpointDevice[] => {
 			hostname: hostnames[i % hostnames.length],
 			ipAddress: `192.168.1.${(i % 10) + 1}`,
 			systemStatus: statuses[i % statuses.length],
+			agentInstalled: statuses[i % statuses.length] !== 'Uninstalled',
 			lastSeenTime: new Date(Date.now() - i * 3600000).toLocaleString('en-US', {
 				month: '2-digit',
 				day: '2-digit',
