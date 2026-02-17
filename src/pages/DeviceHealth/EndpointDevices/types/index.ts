@@ -3,7 +3,8 @@ export interface EndpointDevice {
     slNo: number
     hostname: string
     ipAddress: string
-    systemStatus: 'Online' | 'Offline' | 'Disconnected'
+    systemStatus: 'Online' | 'Offline' | 'Disconnected' | 'Uninstalled'
+    agentInstalled: boolean
     lastSeenTime: string
     agentVersion: string
     os: string
