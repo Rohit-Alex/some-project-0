@@ -54,13 +54,6 @@ export const ENDPOINT_DEVICE_COLUMNS: Column<EndpointDevice>[] = [
         filter: { type: 'text', placeholder: 'Filter Search' },
     },
     {
-        id: 'os',
-        label: 'OS',
-        accessor: 'os',
-        minWidth: 120,
-        filter: { type: 'text', placeholder: 'Filter Search' },
-    },
-    {
         id: 'osDetails',
         label: 'OS Details',
         accessor: 'osDetails',
@@ -151,3 +144,4 @@ export const INSTALLED_APP_COLUMNS: Column<InstalledApplication>[] = [
         minWidth: 150,
     },
 ];
+

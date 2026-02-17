@@ -13,6 +13,7 @@ const generateMockDevices = (count: number): EndpointDevice[] => {
 			hostname: hostnames[i % hostnames.length],
 			ipAddress: `192.168.1.${(i % 10) + 1}`,
 			systemStatus: statuses[i % statuses.length],
+			agentInstalled: statuses[i % statuses.length] !== 'Uninstalled',
 			lastSeenTime: new Date(Date.now() - i * 3600000).toLocaleString('en-US', {
 				month: '2-digit',
 				day: '2-digit',
@@ -56,7 +57,7 @@ export const getMockStats = (): EndpointDeviceStats => ({
 	agentUninstalled: ALL_MOCK_DEVICES.filter(d => !d.agentVersion).length,
 	agentCorrupted: ALL_MOCK_DEVICES.filter(d => d.agentVersion === '0.0.0').length,
 	unlicensedSystems: ALL_MOCK_DEVICES.filter(d => d.license !== 'Enabled').length,
-})
+});
 
 export const getMockEndpointDevices = ( page: number, limit: number, _sortBy?: string, _sortDirection?: 'asc' | 'desc', _filters?: Record<string, string>): EndpointDeviceListResponse => {
 	const start = page * limit;
@@ -78,7 +79,7 @@ const generateMockInstalledApps = (): InstalledApplication[] => [
 	{ id: '3', applicationName: 'Chrome.exe', applicationVersion: '121.0.6167.140', applicationType: 'Windows Application' },
 	{ id: '4', applicationName: 'VSCode.exe', applicationVersion: '1.87.0', applicationType: 'Windows Application' },
 	{ id: '5', applicationName: 'Slack.exe', applicationVersion: '4.36.140', applicationType: 'Windows Store' },
-]
+];
 
 export const getMockDeviceDetail = (device: EndpointDevice): EndpointDeviceDetail => ({
 	systemDetails: {

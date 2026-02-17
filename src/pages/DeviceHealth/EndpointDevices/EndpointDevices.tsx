@@ -9,7 +9,6 @@ import DetailPanel from '@components/DetailPanel';
 import { getMockDeviceDetail } from './mockedData';
 import TableToolbar from '@components/TableToolbar';
 import { useTableParams } from '@hooks/useTableParams';
-import TimeRangeFilter from '@components/TimeRangeFilter';
 import type { DetailSection } from '@components/DetailPanel';
 import { useEndpointDevices, useExportEndpointDevices } from './hooks';
 import { getDateRangeFromTimeRange, filtersToApiParams } from './helpers';
@@ -21,7 +20,7 @@ export default function EndpointDevices() {
     const [detailPanel, setDetailPanel] = useState<{ row: EndpointDevice, data: EndpointDeviceDetail } | null>(null)
     const [appSearchFilter, setAppSearchFilter] = useState('')
 
-    const { page, rowsPerPage, sortBy, sortDirection, filters, timeRange, setPage, setRowsPerPage, setSort, setFilter, setTimeRange } = useTableParams({
+    const { page, rowsPerPage, sortBy, sortDirection, filters, timeRange, setPage, setRowsPerPage, setSort, setFilter } = useTableParams({
         defaultRowsPerPage: 10,
         defaultSortBy: 'lastSeenTime',
         defaultSortDirection: 'desc',
@@ -86,11 +85,39 @@ export default function EndpointDevices() {
         { title: 'Domain Details', data: detailPanel.data.domainDetails as unknown as Record<string, string> },
     ] : [];
 
+    const selectedDevices = useMemo(() => {
+        return (data?.data ?? []).filter(device =>
+            selectedRows.includes(device.id)
+        );
+    }, [selectedRows, data?.data]);
+
+    const canDelete = useMemo(() => {
+        if (!selectedDevices.length) return false;
+
+        return selectedDevices.every(device =>
+            device.systemStatus === "Uninstalled" &&
+            device.agentInstalled === false
+        );
+    }, [selectedDevices]);
+
+    const handleDelete = () => {
+        if (!canDelete) {
+            alert("Only Uninstalled systems without agent can be deleted.");
+            return;
+        }
+
+        const idsToDelete = selectedDevices.map(d => d.id);
+        console.log("Deleting systems:", idsToDelete);
+
+        /* Call API here: await deleteEndpointDevices(idsToDelete); */
+
+        setSelectedRows([]);
+    };
+
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <Typography variant="h5">Endpoint Devices</Typography>
-                <TimeRangeFilter value={timeRange} onChange={setTimeRange} />
             </div>
 
             {/* Toolbar */}
@@ -171,6 +198,15 @@ export default function EndpointDevices() {
                             onClick: handleRefresh,
                             disabled: isLoading,
                         },
+                        {
+                            id: 'delete-system',
+                            icon: <DeleteOutlineOutlined color="error" />,
+                            tooltip: canDelete
+                                ? 'Delete selected systems'
+                                : 'Only Uninstalled systems without agent can be deleted',
+                            onClick: handleDelete,
+                            disabled: !canDelete,
+                        }
                     ]}
                 />
             </Paper>

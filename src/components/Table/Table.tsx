@@ -149,8 +149,7 @@ export default function Table<T>({
 
     return (
         <Paper elevation={elevation} className={className}>
-            {/* <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined }}> */}
-            <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined, minWidth: 0, width: '100%', overflowX: 'auto', '& .MuiTable-root': { width: '100%', minWidth: 0, tableLayout: 'fixed' } }}>
+            <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined }}>
                 <MuiTable stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'}>
                     <TableHead>
                         <TableRow>              
@@ -161,7 +160,7 @@ export default function Table<T>({
                             )}
 
                             {columns.map((column) => (
-                                <TableCell key={column.id} align={column.align ?? 'left'} sx={{ minWidth: column.minWidth, width: column.width, ...getStickyStyles(column, true)}}>
+                                <TableCell key={column.id} align={column.align ?? 'left'} sx={{ minWidth: column.minWidth, width: column.width, whiteSpace: 'nowrap', ...getStickyStyles(column, true)}}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                         {sortable && column.sortable !== false ? (
                                             <TableSortLabel active={sortBy === column.id} direction={sortBy === column.id ? sortDirection : 'asc'} onClick={() => handleSort(column.id)}>
