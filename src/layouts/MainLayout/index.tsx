@@ -25,15 +25,13 @@ export default function MainLayout() {
   const mainContentWidth = drawerOpen ? DRAWER_WIDTH : MINI_DRAWER_WIDTH;
 
     return (
-        <div className="flex w-full min-h-screen">
+        <div className="flex w-full h-full">
             <Header />
             <Drawer />
 
-            <main className="flex-1 flex flex-col min-h-screen"
+            <main className="flex-1 flex flex-col h-full overflow-hidden"
                 style={{
                     minWidth: `calc(100% - ${downLG ? 0 : mainContentWidth}px)`,
-                    width: '100%', 
-                    display: 'table', 
                     marginLeft: downLG ? 0 : undefined,
                     transition: theme.transitions.create(['width', 'margin'], {
                         easing: theme.transitions.easing.sharp,
@@ -43,7 +41,7 @@ export default function MainLayout() {
             >
                 <Toolbar />
                 
-                <div className="flex-1 p-4 md:p-6">
+                <div className="flex-1 p-4 md:p-6 flex flex-col min-h-0">
                     <Outlet />
                 </div>
             </main>
