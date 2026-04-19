@@ -11,6 +11,7 @@ import type {
   UserBlockEvents,
   EndpointBlockEvents,
 } from '../types'
+import { getTimeRangeConfig, generateTimeAwareDataPoints, formatDateForGranularity, formatDateForBackend } from '../utils/timeRangeUtils'
 
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
 
@@ -22,21 +23,23 @@ export const generateMockStats = (): ApplicationControlStats => ({
   warnedEvents: randomInt(50, 200),
 })
 
-export const generateMockApplicationFootprint = (): ApplicationFootprint[] => {
-  const data: ApplicationFootprint[] = []
+export const generateMockApplicationFootprint = (timeRangeKey = '7d'): ApplicationFootprint[] => {
+  const config = getTimeRangeConfig(timeRangeKey)
   let baseApps = 450
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    const growth = randomInt(-5, 15)
+
+  return generateTimeAwareDataPoints(config, (date, index) => {
+    // Adjust growth rate based on granularity
+    const growthRange = config.granularity === 'hourly' ? [-2, 5] : [-5, 15]
+    const growth = randomInt(growthRange[0], growthRange[1])
     baseApps += growth
-    data.push({
-      date: date.toISOString().split('T')[0],
-      uniqueApps: baseApps,
+
+    return {
+      date: formatDateForGranularity(date, config.granularity), // Display format
+      timestamp: formatDateForBackend(date, config.granularity), // Backend format
+      uniqueApps: Math.max(400, baseApps), // Ensure we don't go below 400
       growth,
-    })
-  }
-  return data
+    }
+  })
 }
 
 export const generateMockCategoryInventory = (): CategoryInventory[] => {
@@ -67,17 +70,19 @@ export const generateMockVendorInventory = (): VendorInventory[] => [
   { vendor: 'Unknown Vendors', count: randomInt(100, 200) },
 ]
 
-export const generateMockNewAppTrend = (): NewApplicationTrend[] => {
-  const data: NewApplicationTrend[] = []
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date.toISOString().split('T')[0],
-      newInstalls: randomInt(10, 50),
-    })
-  }
-  return data
+export const generateMockNewAppTrend = (timeRangeKey = '7d'): NewApplicationTrend[] => {
+  const config = getTimeRangeConfig(timeRangeKey)
+
+  return generateTimeAwareDataPoints(config, (date) => {
+    // Adjust new installs range based on granularity
+    const installRange = config.granularity === 'hourly' ? [1, 8] : [10, 50]
+    
+    return {
+      date: formatDateForGranularity(date, config.granularity), // Display format
+      timestamp: formatDateForBackend(date, config.granularity), // Backend format
+      newInstalls: randomInt(installRange[0], installRange[1]),
+    }
+  })
 }
 
 export const generateMockRecentInstalls = (): RecentApplicationInstall[] => {

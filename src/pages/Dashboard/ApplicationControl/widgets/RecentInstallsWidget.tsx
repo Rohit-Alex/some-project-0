@@ -1,7 +1,8 @@
-import { WidgetCard, TimelineWidget } from '@components/Widget'
+import Chart from '@components/Chart/Chart'
+import { WidgetCard } from '@components/Widget'
 import { useRecentInstalls } from '../hooks'
-import { STATUS_COLORS } from '../constants'
-import type { TimelineEventProps } from '@components/Widget'
+import { CHART_COLORS } from '../constants'
+import { openApplicationsBySearch } from '../utils/navigation'
 
 interface RecentInstallsWidgetProps {
   timeRangeKey: string
@@ -12,27 +13,38 @@ interface RecentInstallsWidgetProps {
 export default function RecentInstallsWidget({ timeRangeKey, startDate, endDate }: RecentInstallsWidgetProps) {
   const { data, isLoading } = useRecentInstalls({ timeRangeKey, startDate, endDate })
 
-  const timelineEvents: TimelineEventProps[] = data?.slice(0, 10).map((install) => ({
-    id: install.id,
-    title: `${install.appName} v${install.version}`,
-    subtitle: `${install.user} on ${install.endpoint}`,
-    timestamp: new Date(install.timestamp).toLocaleTimeString(),
-    color: STATUS_COLORS.install as TimelineEventProps['color'],
-    details: {
-      Vendor: install.vendor,
-      Dept: install.department,
-    },
-  })) ?? []
+  const recent = data?.slice(0, 10) ?? []
+  const chartData = {
+    categories: recent.map((install) => `${install.appName} v${install.version}`),
+    series: [{ name: 'Recent installs', data: recent.map(() => 1) }],
+  }
+
+  const handleDataPointClick = (_event: unknown, _chartContext: unknown, opts: { dataPointIndex?: number }) => {
+    if (opts?.dataPointIndex !== undefined && recent[opts.dataPointIndex]) {
+      const selectedApp = recent[opts.dataPointIndex].appName
+      openApplicationsBySearch(selectedApp, timeRangeKey, startDate, endDate)
+    }
+  }
 
   return (
     <WidgetCard
       title="Newly Installed Applications (Live/Recent)"
       subtitle="Near real-time visibility"
-      tooltip="Timeline showing recent app installations"
+      tooltip="Recent app installations (click a bar to open the applications list)"
       loading={isLoading}
       minHeight={400}
     >
-      <TimelineWidget events={timelineEvents} maxHeight={320} />
+      <Chart
+        type="bar"
+        series={chartData.series}
+        categories={chartData.categories}
+        height={300}
+        showDataLabels={false}
+        showLegend={false}
+        colors={[CHART_COLORS.allowed]}
+        options={{ plotOptions: { bar: { horizontal: true } } }}
+        onDataPointClick={handleDataPointClick}
+      />
     </WidgetCard>
   )
 }

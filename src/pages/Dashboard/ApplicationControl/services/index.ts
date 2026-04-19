@@ -33,6 +33,7 @@ import type {
 export interface WidgetParams extends ApplicationControlFilters {
   startDate?: string
   endDate?: string
+  timeRangeKey?: string
 }
 
 export const getAppControlStats = async (params: WidgetParams): Promise<ApplicationControlStats> => {
@@ -46,7 +47,7 @@ export const getAppControlStats = async (params: WidgetParams): Promise<Applicat
 export const getApplicationFootprint = async (params: WidgetParams): Promise<ApplicationFootprint[]> => {
   return withMockData(
     () => apiGet<ApplicationFootprint[]>('/application-control/footprint', { params }),
-    generateMockApplicationFootprint,
+    () => generateMockApplicationFootprint(params.timeRangeKey),
     shouldUseMockData
   )
 }
@@ -70,7 +71,7 @@ export const getVendorInventory = async (params: WidgetParams): Promise<VendorIn
 export const getNewAppTrend = async (params: WidgetParams): Promise<NewApplicationTrend[]> => {
   return withMockData(
     () => apiGet<NewApplicationTrend[]>('/application-control/new-apps-trend', { params }),
-    generateMockNewAppTrend,
+    () => generateMockNewAppTrend(params.timeRangeKey),
     shouldUseMockData
   )
 }

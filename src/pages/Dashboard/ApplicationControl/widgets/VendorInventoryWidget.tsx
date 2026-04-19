@@ -1,6 +1,7 @@
 import Chart from '@components/Chart/Chart'
 import { WidgetCard } from '@components/Widget'
 import { useVendorInventory } from '../hooks'
+import { openApplicationsByVendor } from '../utils/navigation'
 
 interface VendorInventoryWidgetProps {
   timeRangeKey: string
@@ -17,6 +18,14 @@ export default function VendorInventoryWidget({ timeRangeKey, startDate, endDate
     series: [{ name: 'Applications', data: sorted.map((v) => v.count) }],
   }
 
+  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+    // Open applications list filtered by the selected vendor
+    if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
+      const selectedVendor = sorted[opts.dataPointIndex].vendor
+      openApplicationsByVendor(selectedVendor, timeRangeKey, startDate, endDate)
+    }
+  }
+
   return (
     <WidgetCard
       title="Application Inventory by Vendor"
@@ -29,6 +38,7 @@ export default function VendorInventoryWidget({ timeRangeKey, startDate, endDate
         categories={chartData.categories}
         height={300}
         options={{ plotOptions: { bar: { horizontal: true } } }}
+        onDataPointClick={handleDataPointClick}
       />
     </WidgetCard>
   )

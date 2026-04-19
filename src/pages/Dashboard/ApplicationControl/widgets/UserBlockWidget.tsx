@@ -2,6 +2,7 @@ import Chart from '@components/Chart/Chart'
 import { WidgetCard } from '@components/Widget'
 import { useUserBlockEvents } from '../hooks'
 import { CHART_COLORS } from '../constants'
+import { openApplicationsBySearch } from '../utils/navigation'
 
 interface UserBlockWidgetProps {
   timeRangeKey: string
@@ -20,6 +21,13 @@ export default function UserBlockWidget({ timeRangeKey, startDate, endDate }: Us
     ],
   }
 
+  const handleDataPointClick = (_event: unknown, _chartContext: unknown, opts: { dataPointIndex?: number }) => {
+    if (opts?.dataPointIndex !== undefined && data?.[opts.dataPointIndex]) {
+      const selectedUser = data[opts.dataPointIndex].displayName || data[opts.dataPointIndex].user
+      openApplicationsBySearch(selectedUser, timeRangeKey, startDate, endDate)
+    }
+  }
+
   return (
     <WidgetCard
       title="Application Block Events by User"
@@ -34,6 +42,7 @@ export default function UserBlockWidget({ timeRangeKey, startDate, endDate }: Us
         stacked
         colors={[CHART_COLORS.blocked, CHART_COLORS.warned]}
         options={{ plotOptions: { bar: { horizontal: true } } }}
+        onDataPointClick={handleDataPointClick}
       />
     </WidgetCard>
   )

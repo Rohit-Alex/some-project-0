@@ -38,7 +38,7 @@ export const useApplicationFootprint = (params: UseWidgetParams) => {
   const { timeRangeKey, startDate, endDate, enabled = true } = params
   return useQuery({
     queryKey: ['app-control-footprint', timeRangeKey, startDate, endDate],
-    queryFn: () => getApplicationFootprint({ startDate, endDate }),
+    queryFn: () => getApplicationFootprint({ startDate, endDate, timeRangeKey }),
     enabled,
     ...QUERY_OPTIONS,
   })
@@ -68,7 +68,7 @@ export const useNewAppTrend = (params: UseWidgetParams) => {
   const { timeRangeKey, startDate, endDate, enabled = true } = params
   return useQuery({
     queryKey: ['app-control-new-trend', timeRangeKey, startDate, endDate],
-    queryFn: () => getNewAppTrend({ startDate, endDate }),
+    queryFn: () => getNewAppTrend({ startDate, endDate, timeRangeKey }),
     enabled,
     ...QUERY_OPTIONS,
   })

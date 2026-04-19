@@ -9,7 +9,8 @@ export interface ApplicationControlStats {
 }
 
 export interface ApplicationFootprint {
-  date: string
+  date: string // Display format (e.g., "1 AM", "2023-04-19")
+  timestamp?: string // Backend format for filtering/processing
   uniqueApps: number
   growth: number
 }
@@ -26,7 +27,8 @@ export interface VendorInventory {
 }
 
 export interface NewApplicationTrend {
-  date: string
+  date: string // Display format (e.g., "1 AM", "2023-04-19")
+  timestamp?: string // Backend format for filtering/processing
   newInstalls: number
 }
 

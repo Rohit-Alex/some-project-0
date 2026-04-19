@@ -1,6 +1,7 @@
 import Chart from '@components/Chart/Chart'
 import { WidgetCard } from '@components/Widget'
 import { useCategoryInventory } from '../hooks'
+import { openApplicationsByCategory } from '../utils/navigation'
 
 interface CategoryInventoryWidgetProps {
   timeRangeKey: string
@@ -17,6 +18,14 @@ export default function CategoryInventoryWidget({ timeRangeKey, startDate, endDa
     series: [{ name: 'Applications', data: sorted.map((c) => c.count) }],
   }
 
+  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+    // Open applications list filtered by the selected category
+    if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
+      const selectedCategory = sorted[opts.dataPointIndex].category
+      openApplicationsByCategory(selectedCategory, timeRangeKey, startDate, endDate)
+    }
+  }
+
   return (
     <WidgetCard
       title="Application Inventory by Category"
@@ -30,6 +39,7 @@ export default function CategoryInventoryWidget({ timeRangeKey, startDate, endDa
         categories={chartData.categories}
         height={320}
         options={{ plotOptions: { bar: { horizontal: true } } }}
+        onDataPointClick={handleDataPointClick}
       />
     </WidgetCard>
   )

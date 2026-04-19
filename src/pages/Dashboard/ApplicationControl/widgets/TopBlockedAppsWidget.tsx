@@ -2,6 +2,7 @@ import Chart from '@components/Chart/Chart'
 import { WidgetCard } from '@components/Widget'
 import { useTopBlockedApps } from '../hooks'
 import { CHART_COLORS } from '../constants'
+import { openApplicationsBySearch } from '../utils/navigation'
 
 interface TopBlockedAppsWidgetProps {
   timeRangeKey: string
@@ -18,6 +19,14 @@ export default function TopBlockedAppsWidget({ timeRangeKey, startDate, endDate 
     series: [{ name: 'Block Count', data: sorted.map((a) => a.blockCount) }],
   }
 
+  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+    // Open applications list filtered by the selected application
+    if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
+      const selectedApplication = sorted[opts.dataPointIndex].application
+      openApplicationsBySearch(selectedApplication, timeRangeKey, startDate, endDate)
+    }
+  }
+
   return (
     <WidgetCard
       title="Top Blocked Applications"
@@ -31,6 +40,7 @@ export default function TopBlockedAppsWidget({ timeRangeKey, startDate, endDate 
         height={300}
         colors={[CHART_COLORS.blocked]}
         options={{ plotOptions: { bar: { horizontal: true } } }}
+        onDataPointClick={handleDataPointClick}
       />
     </WidgetCard>
   )

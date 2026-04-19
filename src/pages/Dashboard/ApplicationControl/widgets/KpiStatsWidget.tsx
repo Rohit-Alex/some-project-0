@@ -7,6 +7,7 @@ import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined'
 import { KpiCard } from '@components/Widget'
 import { useAppControlStats, useApplicationFootprint } from '../hooks'
 import { CHART_COLORS } from '../constants'
+import { openApplicationsByStatus } from '../utils/navigation'
 
 interface KpiStatsWidgetProps {
   timeRangeKey: string
@@ -33,6 +34,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineData={sparklineData}
           loading={isLoading}
           icon={<AppsOutlined color="primary" />}
+          onClick={() => openApplicationsByStatus('total', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -45,6 +47,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.allowed}
           loading={isLoading}
           icon={<AddCircleOutlineOutlined color="success" />}
+          onClick={() => openApplicationsByStatus('new', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -57,6 +60,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.blocked}
           loading={isLoading}
           icon={<BlockOutlined color="error" />}
+          onClick={() => openApplicationsByStatus('blocked', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -69,6 +73,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.warned}
           loading={isLoading}
           icon={<WarningAmberOutlined color="warning" />}
+          onClick={() => openApplicationsByStatus('warned', timeRangeKey, startDate, endDate)}
         />
       </Grid>
     </Grid>

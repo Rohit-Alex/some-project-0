@@ -2,6 +2,7 @@ import Chart from '@components/Chart/Chart'
 import { WidgetCard } from '@components/Widget'
 import { useEndpointBlockEvents } from '../hooks'
 import { CHART_COLORS } from '../constants'
+import { openApplicationsBySearch } from '../utils/navigation'
 
 interface EndpointBlockWidgetProps {
   timeRangeKey: string
@@ -18,6 +19,13 @@ export default function EndpointBlockWidget({ timeRangeKey, startDate, endDate }
     series: [{ name: 'Blocked', data: sorted.map((e) => e.blocked) }],
   }
 
+  const handleDataPointClick = (_event: unknown, _chartContext: unknown, opts: { dataPointIndex?: number }) => {
+    if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
+      const selectedEndpoint = sorted[opts.dataPointIndex].endpoint
+      openApplicationsBySearch(selectedEndpoint, timeRangeKey, startDate, endDate)
+    }
+  }
+
   return (
     <WidgetCard
       title="Application Block Events by Endpoint"
@@ -31,6 +39,7 @@ export default function EndpointBlockWidget({ timeRangeKey, startDate, endDate }
         height={300}
         colors={[CHART_COLORS.blocked]}
         options={{ plotOptions: { bar: { horizontal: true } } }}
+        onDataPointClick={handleDataPointClick}
       />
     </WidgetCard>
   )
