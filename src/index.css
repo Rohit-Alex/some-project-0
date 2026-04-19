@@ -12,10 +12,26 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Ensure full height layout works properly */
+  html,
   body {
     margin: 0;
-    min-width: 320px;
+    padding: 0;
+    height: 100vh;
     min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-width: 320px;
+  }
+
+  /* Root container should take full height */
+  #root {
+    height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Ensure MUI and Tailwind work together */
