@@ -8,6 +8,7 @@ import Table from '@components/Table/Table';
 import DetailPanel from '@components/DetailPanel';
 import { getMockDeviceDetail } from './mockedData';
 import TableToolbar from '@components/TableToolbar';
+import { TablePageLayout } from '@components/Layout';
 import { useTableParams } from '@hooks/useTableParams';
 import type { DetailSection } from '@components/DetailPanel';
 import { useEndpointDevices, useExportEndpointDevices } from './hooks';
@@ -68,16 +69,21 @@ export default function EndpointDevices() {
 
     const stats = data?.stats;
 
+    const installedApps = useMemo(() => 
+        detailPanel?.data?.installedApplications || [], 
+        [detailPanel?.data?.installedApplications]
+    );
+    
     const filteredApps: InstalledApplication[] = useMemo(() => {
-        if (!detailPanel?.data.installedApplications) return [];
+        if (!installedApps.length) return [];
 
-        if (!appSearchFilter.trim()) return detailPanel.data.installedApplications;
+        if (!appSearchFilter.trim()) return installedApps;
 
         const searchLower = appSearchFilter.toLowerCase();
-        return detailPanel.data.installedApplications.filter(
+        return installedApps.filter(
             (app) => app.applicationName.toLowerCase().includes(searchLower) || app.applicationType.toLowerCase().includes(searchLower)
         );
-    }, [detailPanel?.data.installedApplications, appSearchFilter]);
+    }, [installedApps, appSearchFilter]);
 
     const detailSections: DetailSection[] = detailPanel?.data ? [
         { title: 'System Details', data: detailPanel.data.systemDetails as unknown as Record<string, string> },
@@ -115,103 +121,101 @@ export default function EndpointDevices() {
     };
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-                <Typography variant="h5">Endpoint Devices</Typography>
-            </div>
-
-            {/* Toolbar */}
-            <Paper elevation={0} className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                <TableToolbar
-                    onRefresh={handleRefresh}
-                    onExport={exportData}
-                    loading={isLoading}
-                    stats={[
-                        {
-                            id: 'total',
-                            icon: <DevicesOutlined fontSize="small" />,
-                            label: 'Total Devices',
-                            value: stats?.totalDevices ?? 0,
-                            color: 'info',
-                        },
-                        {
-                            id: 'online',
-                            icon: <CheckCircleOutlineOutlined fontSize="small" />,
-                            label: 'Online',
-                            value: stats?.onlineDevices ?? 0,
-                            color: 'success',
-                        },
-                        {
-                            id: 'offline',
-                            icon: <ErrorOutlineOutlined fontSize="small" />,
-                            label: 'Offline',
-                            value: stats?.offlineDevices ?? 0,
-                            color: 'error',
-                        },
-                        {
-                            id: 'upgrade',
-                            icon: <UpgradeOutlined fontSize="small" />,
-                            label: 'Software Upgrade',
-                            value: stats?.softwareUpgrade ?? 0,
-                            color: 'warning',
-                        },
-                        {
-                            id: 'uninstall',
-                            icon: <DeleteOutlineOutlined fontSize="small" />,
-                            label: 'Software Uninstall',
-                            value: stats?.softwareUninstall ?? 0,
-                            color: 'secondary',
-                        },
-                        {
-                            id: 'reset',
-                            icon: <RestartAltOutlined fontSize="small" />,
-                            label: 'Reset View',
-                            value: stats?.resetDefault ?? 0,
-                        },
-                        {
-                            id: 'agent-uninstalled',
-                            icon: <BlockOutlined fontSize="small" />,
-                            label: 'Agent Uninstalled',
-                            value: stats?.agentUninstalled ?? 0,
-                            color: 'error',
-                        },
-                        {
-                            id: 'agent-corrupted',
-                            icon: <BugReportOutlined fontSize="small" />,
-                            label: 'Agent Corrupted',
-                            value: stats?.agentCorrupted ?? 0,
-                            color: 'warning',
-                        },
-                        {
-                            id: 'unlicensed',
-                            icon: <NoEncryptionOutlined fontSize="small" />,
-                            label: 'Not Licensed',
-                            value: stats?.unlicensedSystems ?? 0,
-                            color: 'secondary',
-                        },
-                    ]}
-                    actions={[
-                        {
-                            id: 'refresh-data',
-                            icon: <RefreshOutlined />,
-                            tooltip: 'Refresh Data',
-                            onClick: handleRefresh,
-                            disabled: isLoading,
-                        },
-                        {
-                            id: 'delete-system',
-                            icon: <DeleteOutlineOutlined color="error" />,
-                            tooltip: canDelete
-                                ? 'Delete selected systems'
-                                : 'Only Uninstalled systems without agent can be deleted',
-                            onClick: handleDelete,
-                            disabled: !canDelete,
-                        }
-                    ]}
-                />
-            </Paper>
-
-            {/* Main Table */}
+        <>
+            <TablePageLayout
+            title="Endpoint Devices"
+            toolbar={
+                <Paper elevation={0} className="px-4 py-2 border border-gray-200 dark:border-gray-700">
+                    <TableToolbar
+                        onRefresh={handleRefresh}
+                        onExport={exportData}
+                        loading={isLoading}
+                        stats={[
+                            {
+                                id: 'total',
+                                icon: <DevicesOutlined fontSize="small" />,
+                                label: 'Total Devices',
+                                value: stats?.totalDevices ?? 0,
+                                color: 'info',
+                            },
+                            {
+                                id: 'online',
+                                icon: <CheckCircleOutlineOutlined fontSize="small" />,
+                                label: 'Online',
+                                value: stats?.onlineDevices ?? 0,
+                                color: 'success',
+                            },
+                            {
+                                id: 'offline',
+                                icon: <ErrorOutlineOutlined fontSize="small" />,
+                                label: 'Offline',
+                                value: stats?.offlineDevices ?? 0,
+                                color: 'error',
+                            },
+                            {
+                                id: 'upgrade',
+                                icon: <UpgradeOutlined fontSize="small" />,
+                                label: 'Software Upgrade',
+                                value: stats?.softwareUpgrade ?? 0,
+                                color: 'warning',
+                            },
+                            {
+                                id: 'uninstall',
+                                icon: <DeleteOutlineOutlined fontSize="small" />,
+                                label: 'Software Uninstall',
+                                value: stats?.softwareUninstall ?? 0,
+                                color: 'secondary',
+                            },
+                            {
+                                id: 'reset',
+                                icon: <RestartAltOutlined fontSize="small" />,
+                                label: 'Reset View',
+                                value: stats?.resetDefault ?? 0,
+                            },
+                            {
+                                id: 'agent-uninstalled',
+                                icon: <BlockOutlined fontSize="small" />,
+                                label: 'Agent Uninstalled',
+                                value: stats?.agentUninstalled ?? 0,
+                                color: 'error',
+                            },
+                            {
+                                id: 'agent-corrupted',
+                                icon: <BugReportOutlined fontSize="small" />,
+                                label: 'Agent Corrupted',
+                                value: stats?.agentCorrupted ?? 0,
+                                color: 'warning',
+                            },
+                            {
+                                id: 'unlicensed',
+                                icon: <NoEncryptionOutlined fontSize="small" />,
+                                label: 'Not Licensed',
+                                value: stats?.unlicensedSystems ?? 0,
+                                color: 'secondary',
+                            },
+                        ]}
+                        actions={[
+                            {
+                                id: 'refresh-data',
+                                icon: <RefreshOutlined />,
+                                tooltip: 'Refresh Data',
+                                onClick: handleRefresh,
+                                disabled: isLoading,
+                            },
+                            {
+                                id: 'delete-system',
+                                icon: <DeleteOutlineOutlined color="error" />,
+                                tooltip: canDelete
+                                    ? 'Delete selected systems'
+                                    : 'Only Uninstalled systems without agent can be deleted',
+                                onClick: handleDelete,
+                                disabled: !canDelete,
+                            }
+                        ]}
+                    />
+                </Paper>
+            }
+        >
             <Table
                 data={data?.data ?? []}
                 columns={ENDPOINT_DEVICE_COLUMNS}
@@ -232,7 +236,7 @@ export default function EndpointDevices() {
                 onRowsPerPageChange={setRowsPerPage}
                 rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
                 stickyHeader
-                maxHeight={600}
+                maxHeight="100%"
                 selectable
                 selectedRows={selectedRows}
                 onSelectionChange={handleSelectionChange}
@@ -252,32 +256,33 @@ export default function EndpointDevices() {
                     },
                 ]}
             />
+        </TablePageLayout>
 
-            {/* Detail Panel */}
-            <DetailPanel open={!!detailPanel} title={`Device Details - ${detailPanel?.row.hostname ?? ''}`} sections={detailSections} onClose={handleCloseDetailPanel}>
-                {/* Installed Applications Table */}
-                <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                            List of Applications Installed
-                        </Typography>
+        {/* Detail Panel */}
+        <DetailPanel open={!!detailPanel} title={`Device Details - ${detailPanel?.row.hostname ?? ''}`} sections={detailSections} onClose={handleCloseDetailPanel}>
+            {/* Installed Applications Table */}
+            <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                        List of Applications Installed
+                    </Typography>
 
-                        <TextField size="small" placeholder="Search applications..." value={appSearchFilter} onChange={(e) => setAppSearchFilter(e.target.value)} sx={{ width: 250 }}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchOutlined fontSize="small" />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                    </Box>
-
-                    <Box sx={{ maxHeight: 250, overflow: 'auto' }}>
-                        <Table data={filteredApps} columns={INSTALLED_APP_COLUMNS} rowKey="id" dense stickyHeader />
-                    </Box>
+                    <TextField size="small" placeholder="Search applications..." value={appSearchFilter} onChange={(e) => setAppSearchFilter(e.target.value)} sx={{ width: 250 }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchOutlined fontSize="small" />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
                 </Box>
-            </DetailPanel>
-        </div>
-    );
+
+                <Box sx={{ maxHeight: 250, overflow: 'auto' }}>
+                    <Table data={filteredApps} columns={INSTALLED_APP_COLUMNS} rowKey="id" dense stickyHeader />
+                </Box>
+            </Box>
+        </DetailPanel>
+        </>
+    )
 };
