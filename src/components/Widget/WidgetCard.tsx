@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
 import Tooltip from '@mui/material/Tooltip'
@@ -17,6 +17,7 @@ export default function WidgetCard({
   headerAction,
   minHeight = 200,
 }: WidgetCardProps): ReactNode {
+  const [isHeaderHovered, setIsHeaderHovered] = useState(false)
   return (
     <Paper
       elevation={0}
@@ -24,7 +25,11 @@ export default function WidgetCard({
       sx={{ minHeight }}
     >
       {/* Header */}
-      <div className="flex items-start justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div 
+        className="flex items-start justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 transition-all duration-200"
+        onMouseEnter={() => setIsHeaderHovered(true)}
+        onMouseLeave={() => setIsHeaderHovered(false)}
+      >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1">
             <Typography variant="subtitle1" fontWeight={600} noWrap>
@@ -39,9 +44,24 @@ export default function WidgetCard({
             )}
           </div>
           {subtitle && (
-            <Typography variant="caption" color="text.secondary">
-              {subtitle}
-            </Typography>
+            <div
+              className={`transition-all duration-300 ease-in-out ${
+                isHeaderHovered 
+                  ? 'opacity-100 max-h-20 transform translate-y-0' 
+                  : 'opacity-0 max-h-0 transform -translate-y-2'
+              }`}
+              style={{
+                overflow: 'hidden',
+              }}
+            >
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                className="block pt-1"
+              >
+                {subtitle}
+              </Typography>
+            </div>
           )}
         </div>
         {headerAction && <div className="ml-2">{headerAction}</div>}

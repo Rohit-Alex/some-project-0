@@ -23,6 +23,7 @@ export interface KpiCardProps {
   sparklineColor?: string
   icon?: ReactNode
   className?: string
+  onClick?: () => void
 }
 
 export interface TimelineEventProps {

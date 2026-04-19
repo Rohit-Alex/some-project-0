@@ -56,6 +56,7 @@ export default function Chart({
   options: customOptions,
   loading = false,
   className,
+  onDataPointClick,
 }: ChartProps): ReactNode {
   const theme = useTheme()
   const { mode } = useThemeStore()
@@ -97,6 +98,23 @@ export default function Chart({
           },
         },
         stacked,
+        events: {
+          ...(onDataPointClick && {
+            dataPointSelection: onDataPointClick,
+            markerClick: onDataPointClick,
+            click: (event: any, chartContext: any, config: any) => {
+              // Handle area/line chart clicks when clicking on the chart area
+              if (config && config.dataPointIndex !== undefined) {
+                onDataPointClick(event, chartContext, config)
+              }
+            },
+          }),
+        },
+        ...(onDataPointClick && {
+          selection: {
+            enabled: false, // Disable selection to avoid conflicts
+          },
+        }),
       },
       colors: colors ?? defaultColors,
       dataLabels: {
@@ -105,6 +123,16 @@ export default function Chart({
       stroke: {
         curve,
         width: type === 'area' ? 2 : type === 'line' ? 3 : 0,
+      },
+      markers: {
+        size: onDataPointClick && (type === 'line' || type === 'area') ? 8 : 0,
+        colors: ['#ffffff'],
+        strokeColors: colors ?? [theme.palette.primary.main],
+        strokeWidth: 2,
+        hover: {
+          size: onDataPointClick ? 12 : undefined,
+          sizeOffset: 2,
+        },
       },
       fill: {
         type: fillType,
@@ -129,8 +157,14 @@ export default function Chart({
         labels: {
           style: {
             colors: textColor,
-            fontSize: '12px',
+            fontSize: '11px',
           },
+          rotate: categories && categories.length > 12 ? -30 : 0,
+          rotateAlways: false,
+          hideOverlappingLabels: true,
+          showDuplicates: false,
+          trim: false,
+          maxHeight: categories && categories.length > 12 ? 60 : 40,
         },
         axisBorder: {
           show: false,
@@ -138,6 +172,7 @@ export default function Chart({
         axisTicks: {
           show: false,
         },
+        tickAmount: categories && categories.length > 16 ? 8 : undefined,
       },
       yaxis: {
         labels: {
@@ -271,6 +306,7 @@ export default function Chart({
     title,
     subtitle,
     customOptions,
+    onDataPointClick,
   ])
 
   // Build bar chart options (simplified to avoid rendering issues)
@@ -282,6 +318,23 @@ export default function Chart({
         toolbar: { show: showToolbar },
         animations: { enabled: animated },
         stacked,
+        events: {
+          ...(onDataPointClick && {
+            dataPointSelection: onDataPointClick,
+            markerClick: onDataPointClick,
+            click: (event: any, chartContext: any, config: any) => {
+              // Handle area/line chart clicks when clicking on the chart area
+              if (config && config.dataPointIndex !== undefined) {
+                onDataPointClick(event, chartContext, config)
+              }
+            },
+          }),
+        },
+        ...(onDataPointClick && {
+          selection: {
+            enabled: false, // Disable selection to avoid conflicts
+          },
+        }),
       },
       plotOptions: {
         bar: {
@@ -295,8 +348,15 @@ export default function Chart({
       xaxis: {
         categories,
         labels: {
-          style: { colors: textColor, fontSize: '12px' },
+          style: { colors: textColor, fontSize: '11px' },
+          rotate: categories && categories.length > 12 ? -30 : 0,
+          rotateAlways: false,
+          hideOverlappingLabels: true,
+          showDuplicates: false,
+          trim: false,
+          maxHeight: categories && categories.length > 12 ? 60 : 40,
         },
+        tickAmount: categories && categories.length > 16 ? 8 : undefined,
       },
       yaxis: {
         labels: {
@@ -336,6 +396,7 @@ export default function Chart({
     showLegend,
     legendPosition,
     isDark,
+    onDataPointClick,
   ])
 
   // Choose the right options based on chart type
@@ -374,6 +435,7 @@ export default function Chart({
       style={{
         minHeight: typeof height === 'number' ? height : 200,
         width: '100%',
+        cursor: onDataPointClick ? 'pointer' : 'default',
       }}
     >
       <ReactApexChart

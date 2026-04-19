@@ -22,6 +22,7 @@ export default function KpiCard({
   sparklineColor,
   icon,
   className = '',
+  onClick,
 }: KpiCardProps): ReactNode {
   const theme = useTheme()
 
@@ -71,7 +72,18 @@ export default function KpiCard({
   return (
     <Paper
       elevation={0}
-      className={`border border-gray-200 dark:border-gray-700 p-4 h-full flex flex-col ${className}`}
+      className={`border border-gray-200 dark:border-gray-700 p-4 h-full flex flex-col ${
+        onClick ? 'cursor-pointer hover:shadow-md transition-shadow duration-200' : ''
+      } ${className}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      } : undefined}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">

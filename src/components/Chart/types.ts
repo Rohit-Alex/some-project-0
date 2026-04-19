@@ -60,5 +60,7 @@ export interface ChartProps {
   loading?: boolean
   /** Class name */
   className?: string
+  /** Click handler for chart elements */
+  onDataPointClick?: (event: any, chartContext: any, opts: any) => void
 }
 
