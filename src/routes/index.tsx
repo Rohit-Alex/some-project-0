@@ -17,7 +17,10 @@ import {
 } from '@pages/Events';
 
 // Device Health Pages
-import { EndpointDevices } from '@pages/DeviceHealth';
+import { EndpointDevices } from '@pages/DeviceHealth'
+
+// Application Pages
+import { ApplicationList } from '@pages/Applications';
 
 // Dashboard Pages
 import {
@@ -124,6 +127,11 @@ const router = createBrowserRouter([
                     {
                         path: ROUTES.DEVICE_HEALTH_ENDPOINTS,
                         element: <EndpointDevices />,
+                    },
+                    // Applications
+                    {
+                        path: ROUTES.POLICY_APP_CONTROL_INVENTORY,
+                        element: <ApplicationList />,
                     },
                     // Other dynamic routes (placeholders)
                     ...dynamicRoutes,
