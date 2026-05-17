@@ -34,6 +34,7 @@ import type {
 export interface WidgetParams extends DeviceControlFilters {
   startDate?: string
   endDate?: string
+  timeRangeKey?: string
 }
 
 export const getDeviceControlStats = async (params: WidgetParams): Promise<DeviceControlStats> => {
@@ -111,7 +112,7 @@ export const getDepartmentBlocked = async (params: WidgetParams): Promise<Depart
 export const getAlertVolume = async (params: WidgetParams): Promise<AlertIncidentVolume[]> => {
   return withMockData(
     () => apiGet<AlertIncidentVolume[]>('/device-control/alert-volume', { params }),
-    generateMockAlertVolume,
+    () => generateMockAlertVolume(params.timeRangeKey),
     shouldUseMockData
   )
 }
@@ -119,7 +120,7 @@ export const getAlertVolume = async (params: WidgetParams): Promise<AlertInciden
 export const getEventTrend = async (params: WidgetParams): Promise<DeviceEventTrend[]> => {
   return withMockData(
     () => apiGet<DeviceEventTrend[]>('/device-control/event-trend', { params }),
-    generateMockEventTrend,
+    () => generateMockEventTrend(params.timeRangeKey),
     shouldUseMockData
   )
 }

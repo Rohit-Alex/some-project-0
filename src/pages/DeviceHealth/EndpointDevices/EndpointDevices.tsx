@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Box, Paper, TextField, Typography, InputAdornment } from '@mui/material';
-import { UpgradeOutlined, DeleteOutlineOutlined, RestartAltOutlined, BlockOutlined, BugReportOutlined, NoEncryptionOutlined,
-    SearchOutlined, RefreshOutlined, DevicesOutlined, ErrorOutlineOutlined, CheckCircleOutlineOutlined
+import { DeleteOutlineOutlined,
+    SearchOutlined, DevicesOutlined, ErrorOutlineOutlined, CheckCircleOutlineOutlined, WarningAmberOutlined, FileDownloadOutlined
 } from '@mui/icons-material';
 
 import Table from '@components/Table/Table';
@@ -22,7 +22,7 @@ export default function EndpointDevices() {
     const [appSearchFilter, setAppSearchFilter] = useState('')
 
     const { page, rowsPerPage, sortBy, sortDirection, filters, timeRange, setPage, setRowsPerPage, setSort, setFilter } = useTableParams({
-        defaultRowsPerPage: 10,
+        defaultRowsPerPage: 100,
         defaultSortBy: 'lastSeenTime',
         defaultSortDirection: 'desc',
     });
@@ -62,6 +62,12 @@ export default function EndpointDevices() {
         setDetailPanel({ row, data: detail });
         setAppSearchFilter('');
     }, []);
+
+    const handleCellClick = useCallback((columnId: string, row: EndpointDevice) => {
+        if (columnId === 'hostname') {
+            handleRowClick(row);
+        }
+    }, [handleRowClick]);
 
     const handleCloseDetailPanel = () => {
         setDetailPanel(null);
@@ -120,6 +126,36 @@ export default function EndpointDevices() {
         setSelectedRows([]);
     };
 
+    const downloadCsv = (rows: EndpointDevice[], filename: string) => {
+        const headers = ENDPOINT_DEVICE_COLUMNS.map((column) => column.id);
+        const csvRows = rows.map((row) =>
+            headers.map((header) => JSON.stringify(row[header as keyof EndpointDevice] ?? '')).join(',')
+        );
+        const csv = [headers.join(','), ...csvRows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+
+    const handleExtendedReportDownload = async () => {
+        const rows = selectedDevices.length ? selectedDevices : await exportData();
+        downloadCsv(rows, `endpoint-devices-extended-${new Date().toISOString().split('T')[0]}.csv`);
+    };
+
+    const handleUninstall = () => {
+        if (!selectedDevices.length) {
+            alert('Select at least one system to uninstall.');
+            return;
+        }
+
+        console.log('Uninstalling agents:', selectedDevices.map((device) => device.id));
+        setSelectedRows([]);
+    };
+
     return (
         <>
             <TablePageLayout
@@ -128,7 +164,7 @@ export default function EndpointDevices() {
                 <Paper elevation={0} className="px-4 py-2 border border-gray-200 dark:border-gray-700">
                     <TableToolbar
                         onRefresh={handleRefresh}
-                        onExport={exportData}
+                        showExport={false}
                         loading={isLoading}
                         stats={[
                             {
@@ -153,55 +189,15 @@ export default function EndpointDevices() {
                                 color: 'error',
                             },
                             {
-                                id: 'upgrade',
-                                icon: <UpgradeOutlined fontSize="small" />,
-                                label: 'Software Upgrade',
-                                value: stats?.softwareUpgrade ?? 0,
+                                id: 'warning',
+                                icon: <WarningAmberOutlined fontSize="small" />,
+                                label: 'Warning',
+                                value: stats?.warningDevices ?? 0,
                                 color: 'warning',
-                            },
-                            {
-                                id: 'uninstall',
-                                icon: <DeleteOutlineOutlined fontSize="small" />,
-                                label: 'Software Uninstall',
-                                value: stats?.softwareUninstall ?? 0,
-                                color: 'secondary',
-                            },
-                            {
-                                id: 'reset',
-                                icon: <RestartAltOutlined fontSize="small" />,
-                                label: 'Reset View',
-                                value: stats?.resetDefault ?? 0,
-                            },
-                            {
-                                id: 'agent-uninstalled',
-                                icon: <BlockOutlined fontSize="small" />,
-                                label: 'Agent Uninstalled',
-                                value: stats?.agentUninstalled ?? 0,
-                                color: 'error',
-                            },
-                            {
-                                id: 'agent-corrupted',
-                                icon: <BugReportOutlined fontSize="small" />,
-                                label: 'Agent Corrupted',
-                                value: stats?.agentCorrupted ?? 0,
-                                color: 'warning',
-                            },
-                            {
-                                id: 'unlicensed',
-                                icon: <NoEncryptionOutlined fontSize="small" />,
-                                label: 'Not Licensed',
-                                value: stats?.unlicensedSystems ?? 0,
-                                color: 'secondary',
                             },
                         ]}
+                        onExport={handleExtendedReportDownload}
                         actions={[
-                            {
-                                id: 'refresh-data',
-                                icon: <RefreshOutlined />,
-                                tooltip: 'Refresh Data',
-                                onClick: handleRefresh,
-                                disabled: isLoading,
-                            },
                             {
                                 id: 'delete-system',
                                 icon: <DeleteOutlineOutlined color="error" />,
@@ -210,6 +206,20 @@ export default function EndpointDevices() {
                                     : 'Only Uninstalled systems without agent can be deleted',
                                 onClick: handleDelete,
                                 disabled: !canDelete,
+                            },
+                            {
+                                id: 'uninstall-agent',
+                                icon: <DeleteOutlineOutlined />,
+                                tooltip: 'Uninstall selected agents from console',
+                                onClick: handleUninstall,
+                                disabled: !selectedDevices.length,
+                            },
+                            {
+                                id: 'extended-report',
+                                icon: <FileDownloadOutlined />,
+                                tooltip: selectedDevices.length ? 'Download extended report for selected systems' : 'Download extended report',
+                                onClick: handleExtendedReportDownload,
+                                disabled: isLoading,
                             }
                         ]}
                     />
@@ -241,20 +251,8 @@ export default function EndpointDevices() {
                 selectedRows={selectedRows}
                 onSelectionChange={handleSelectionChange}
                 maxSelection={5}
-                onRowClick={handleRowClick}
+                onCellClick={handleCellClick}
                 emptyMessage="No endpoint devices found"
-                smartActions={[
-                    {
-                        id: 'view',
-                        label: 'View Details',
-                        onClick: handleRowClick,
-                    },
-                    {
-                        id: 'reboot',
-                        label: 'Reboot Device',
-                        onClick: (row) => console.log('Reboot:', row),
-                    },
-                ]}
             />
         </TablePageLayout>
 

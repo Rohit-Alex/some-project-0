@@ -37,8 +37,8 @@ export function useApplicationControlEvents(params: UseApplicationControlEventsP
 }
 
 export function useExportApplicationControlEvents() {
-  const exportData = async () => {
-    const data = await applicationControlService.exportData()
+  const exportData = async (selectedRows?: object[]) => {
+    const data = selectedRows?.length ? selectedRows : await applicationControlService.exportData()
     // Convert to CSV and download
     const headers = Object.keys(data[0] || {}).join(',')
     const rows = data.map((row) => Object.values(row).join(','))

@@ -46,6 +46,7 @@ export function useExportEndpointDevices() {
 		a.download = `endpoint-devices-${new Date().toISOString().split('T')[0]}.csv`;
 		a.click();
 		window.URL.revokeObjectURL(url);
+		return data;
 	};
 
 	return { exportData };

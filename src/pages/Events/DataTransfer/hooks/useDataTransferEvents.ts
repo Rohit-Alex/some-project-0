@@ -37,8 +37,8 @@ export function useDataTransferEvents(params: UseDataTransferEventsParams) {
 }
 
 export function useExportDataTransferEvents() {
-  const exportData = async () => {
-    const data = await dataTransferService.exportData()
+  const exportData = async (selectedRows?: object[]) => {
+    const data = selectedRows?.length ? selectedRows : await dataTransferService.exportData()
     // Convert to CSV and download
     const headers = Object.keys(data[0] || {}).join(',')
     const rows = data.map((row) => Object.values(row).join(','))

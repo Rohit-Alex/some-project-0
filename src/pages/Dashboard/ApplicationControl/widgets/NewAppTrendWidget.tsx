@@ -17,7 +17,7 @@ export default function NewAppTrendWidget({ timeRangeKey, startDate, endDate }: 
     series: [{ name: 'New Installs', data: data?.map((t) => t.newInstalls) ?? [] }],
   }
 
-  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
     // Open new applications list filtered by the selected date
     if (opts?.dataPointIndex !== undefined && data?.[opts.dataPointIndex]) {
       const selectedData = data[opts.dataPointIndex]

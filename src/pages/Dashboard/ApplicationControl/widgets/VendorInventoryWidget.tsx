@@ -18,7 +18,7 @@ export default function VendorInventoryWidget({ timeRangeKey, startDate, endDate
     series: [{ name: 'Applications', data: sorted.map((v) => v.count) }],
   }
 
-  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
     // Open applications list filtered by the selected vendor
     if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
       const selectedVendor = sorted[opts.dataPointIndex].vendor

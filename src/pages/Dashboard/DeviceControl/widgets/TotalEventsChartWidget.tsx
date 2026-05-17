@@ -2,6 +2,7 @@ import Chart from '@components/Chart/Chart'
 import { WidgetCard } from '@components/Widget'
 import { useEventTrend } from '../hooks'
 import { CHART_COLORS } from '../constants'
+import { openDeviceControlEventsByStatus } from '../utils/navigation'
 
 interface TotalEventsChartWidgetProps {
   timeRangeKey: string
@@ -19,6 +20,14 @@ export default function TotalEventsChartWidget({ timeRangeKey, startDate, endDat
     ],
   }
 
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
+    if (opts?.dataPointIndex !== undefined && data?.[opts.dataPointIndex]) {
+      const selectedData = data[opts.dataPointIndex]
+      const filterDate = selectedData.timestamp || selectedData.date
+      openDeviceControlEventsByStatus('total', timeRangeKey, filterDate, filterDate)
+    }
+  }
+
   return (
     <WidgetCard
       title="Total Device Control Events"
@@ -34,6 +43,7 @@ export default function TotalEventsChartWidget({ timeRangeKey, startDate, endDat
         height={320}
         stacked
         colors={[CHART_COLORS.allowed, CHART_COLORS.blocked]}
+        onDataPointClick={handleDataPointClick}
       />
     </WidgetCard>
   )

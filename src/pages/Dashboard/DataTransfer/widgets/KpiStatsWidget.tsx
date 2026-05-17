@@ -7,6 +7,7 @@ import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined'
 import { KpiCard } from '@components/Widget'
 import { useDataTransferStats, useTransferTrend } from '../hooks'
 import { CHART_COLORS } from '../constants'
+import { openDataTransferEventsByStatus } from '../utils/navigation'
 
 interface KpiStatsWidgetProps {
   timeRangeKey: string
@@ -33,6 +34,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineData={sparklineData}
           loading={isLoading}
           icon={<SyncOutlined color="primary" />}
+          onClick={() => openDataTransferEventsByStatus('total', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -45,6 +47,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.allowed}
           loading={isLoading}
           icon={<CheckCircleOutlineOutlined color="success" />}
+          onClick={() => openDataTransferEventsByStatus('allowed', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -57,6 +60,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.blocked}
           loading={isLoading}
           icon={<BlockOutlined color="error" />}
+          onClick={() => openDataTransferEventsByStatus('blocked', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -69,6 +73,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.logged}
           loading={isLoading}
           icon={<DescriptionOutlined color="info" />}
+          onClick={() => openDataTransferEventsByStatus('logged', timeRangeKey, startDate, endDate)}
         />
       </Grid>
     </Grid>

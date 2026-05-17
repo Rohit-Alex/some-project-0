@@ -28,7 +28,7 @@ export default function RecentInstallsWidget({ timeRangeKey, startDate, endDate 
 
   return (
     <WidgetCard
-      title="Newly Installed Applications (Live/Recent)"
+      title="Recently Installed Applications (Live/Recent)"
       subtitle="Near real-time visibility"
       tooltip="Recent app installations (click a bar to open the applications list)"
       loading={isLoading}

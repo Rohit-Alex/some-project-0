@@ -37,8 +37,8 @@ export function useDeviceControlEvents(params: UseDeviceControlEventsParams) {
 }
 
 export function useExportDeviceControlEvents() {
-  const exportData = async () => {
-    const data = await deviceControlService.exportData()
+  const exportData = async (selectedRows?: object[]) => {
+    const data = selectedRows?.length ? selectedRows : await deviceControlService.exportData()
     // Convert to CSV and download
     const headers = Object.keys(data[0] || {}).join(',')
     const rows = data.map((row) => Object.values(row).join(','))

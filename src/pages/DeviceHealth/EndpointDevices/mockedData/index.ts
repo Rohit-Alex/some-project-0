@@ -2,7 +2,7 @@ import type { EndpointDevice, EndpointDeviceListResponse, EndpointDeviceStats, E
 
 const generateMockDevices = (count: number): EndpointDevice[] => {
 	const hostnames = ['vikram', 'vikram1', 'desktop-01', 'laptop-02', 'server-03'];
-	const statuses: EndpointDevice['systemStatus'][] = ['Online', 'Offline', 'Disconnected'];
+	const statuses: EndpointDevice['systemStatus'][] = ['Online', 'Offline', 'Disconnected', 'Uninstalled'];
 	const licenses: EndpointDevice['license'][] = ['Enabled', 'Disabled', 'Expired'];
 	const rebootOptions: EndpointDevice['rebootNeeded'][] = ['Yes', 'No', 'Optional'];
 
@@ -46,10 +46,35 @@ const generateMockDevices = (count: number): EndpointDevice[] => {
 
 const ALL_MOCK_DEVICES = generateMockDevices(150)
 
+const normalizeFilterValues = (value: string | string[] | undefined): string[] => {
+	if (!value) return []
+	return (Array.isArray(value) ? value : value.split(',')).map((item) => item.trim().toLowerCase()).filter(Boolean)
+}
+
+const matchesFilter = (fieldValue: unknown, filterValue: string | string[] | undefined): boolean => {
+	const values = normalizeFilterValues(filterValue)
+	if (!values.length) return true
+	const candidate = String(fieldValue ?? '').toLowerCase()
+	return values.some((value) => candidate.includes(value))
+}
+
+const compareValues = (a: unknown, b: unknown): number => {
+	const firstDate = Date.parse(String(a))
+	const secondDate = Date.parse(String(b))
+	if (!Number.isNaN(firstDate) && !Number.isNaN(secondDate)) {
+		return firstDate - secondDate
+	}
+	if (typeof a === 'number' && typeof b === 'number') {
+		return a - b
+	}
+	return String(a ?? '').localeCompare(String(b ?? ''), undefined, { numeric: true, sensitivity: 'base' })
+}
+
 export const getMockStats = (): EndpointDeviceStats => ({
 	totalDevices: ALL_MOCK_DEVICES.length,
 	onlineDevices: ALL_MOCK_DEVICES.filter((d) => d.systemStatus === 'Online').length,
 	offlineDevices: ALL_MOCK_DEVICES.filter((d) => d.systemStatus === 'Offline').length,
+	warningDevices: ALL_MOCK_DEVICES.filter((d) => d.license !== 'Enabled' || d.rebootNeeded !== 'No' || d.systemStatus === 'Disconnected').length,
 
 	softwareUpgrade: ALL_MOCK_DEVICES.filter(d => d.agentVersion < '3.0.0').length,
 	softwareUninstall: ALL_MOCK_DEVICES.filter(d => d.license === 'Expired').length,
@@ -59,14 +84,23 @@ export const getMockStats = (): EndpointDeviceStats => ({
 	unlicensedSystems: ALL_MOCK_DEVICES.filter(d => d.license !== 'Enabled').length,
 });
 
-export const getMockEndpointDevices = ( page: number, limit: number, _sortBy?: string, _sortDirection?: 'asc' | 'desc', _filters?: Record<string, string>): EndpointDeviceListResponse => {
+export const getMockEndpointDevices = ( page: number, limit: number, sortBy?: string, sortDirection?: 'asc' | 'desc', filters?: Record<string, string | string[]>): EndpointDeviceListResponse => {
+	const filteredData = ALL_MOCK_DEVICES.filter((device) =>
+		Object.entries(filters ?? {}).every(([key, value]) => matchesFilter(device[key as keyof EndpointDevice], value))
+	)
+	const sortedData = sortBy
+		? [...filteredData].sort((a, b) => {
+			const direction = sortDirection === 'desc' ? -1 : 1
+			return compareValues(a[sortBy as keyof EndpointDevice], b[sortBy as keyof EndpointDevice]) * direction
+		})
+		: filteredData
 	const start = page * limit;
 	const end = start + limit;
-	const paginatedData = ALL_MOCK_DEVICES.slice(start, end);
+	const paginatedData = sortedData.slice(start, end);
 
 	return {
 		data: paginatedData,
-		total: ALL_MOCK_DEVICES.length,
+		total: filteredData.length,
 		page,
 		limit,
 		stats: getMockStats(),
@@ -99,9 +133,9 @@ export const getMockDeviceDetail = (device: EndpointDevice): EndpointDeviceDetai
 		agentVersion: device.agentVersion,
 		lastSeenTime: device.lastSeenTime,
 		license: device.license,
-		usbModuleStatus: 'Healthy',
-		appControlStatus: 'Healthy',
-		networkModuleStatus: 'Healthy',
+		usbModuleStatus: device.license === 'Enabled' ? 'Warning' : 'Error',
+		appControlStatus: device.rebootNeeded === 'No' ? 'Warning' : 'Error',
+		networkModuleStatus: device.systemStatus === 'Online' ? 'Warning' : 'Error',
 		downloadLatestAgentLogs: 'Link/Icon',
 		policiesDeployedOnSystem: 'USB Monitoring, Nw, keyword',
 		lastPolicyDeployedWithTime: device.lastSeenTime,

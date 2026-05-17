@@ -19,7 +19,7 @@ export default function TopBlockedAppsWidget({ timeRangeKey, startDate, endDate 
     series: [{ name: 'Block Count', data: sorted.map((a) => a.blockCount) }],
   }
 
-  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
     // Open applications list filtered by the selected application
     if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
       const selectedApplication = sorted[opts.dataPointIndex].application

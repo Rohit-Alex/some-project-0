@@ -3,7 +3,6 @@ import Typography from '@mui/material/Typography'
 import Paper from '@mui/material/Paper'
 import Collapse from '@mui/material/Collapse'
 import IconButton from '@mui/material/IconButton'
-import RefreshOutlined from '@mui/icons-material/RefreshOutlined'
 import ComputerOutlined from '@mui/icons-material/ComputerOutlined'
 import BlockOutlined from '@mui/icons-material/BlockOutlined'
 import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined'
@@ -15,7 +14,7 @@ import TimeRangeFilter from '@components/TimeRangeFilter'
 import TableToolbar from '@components/TableToolbar'
 import { useTableParams } from '@hooks/useTableParams'
 import { useDataTransferEvents, useExportDataTransferEvents } from './hooks'
-import { DATA_TRANSFER_COLUMNS, ROWS_PER_PAGE_OPTIONS, USER_DETAIL_COLUMNS } from './constants'
+import { DATA_TRANSFER_COLUMNS, ROWS_PER_PAGE_OPTIONS } from './constants'
 import { getDateRangeFromTimeRange, filtersToApiParams } from './helpers'
 import type { DataTransferFilters, DataTransferEvent, UserDetail } from './types'
 
@@ -54,7 +53,7 @@ export default function DataTransfer() {
     setFilter,
     setTimeRange,
   } = useTableParams({
-    defaultRowsPerPage: 10,
+    defaultRowsPerPage: 100,
     defaultSortBy: 'eventTime',
     defaultSortDirection: 'desc',
   })
@@ -114,13 +113,17 @@ export default function DataTransfer() {
 
   const stats = data?.stats
 
+  const selectedEvents = useMemo(() => {
+    return (data?.data ?? []).filter((event) => selectedRows.includes(event.id))
+  }, [data?.data, selectedRows])
+
   // Convert user detail to array format for table display
   const userDetailData = detailPanel?.data
     ? [detailPanel.data]
     : []
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-center justify-between">
         <Typography variant="h5">Data Transfer Events</Typography>
         <TimeRangeFilter value={timeRange} onChange={setTimeRange} />
@@ -130,7 +133,7 @@ export default function DataTransfer() {
       <Paper elevation={0} className="px-4 py-2 border border-gray-200 dark:border-gray-700">
         <TableToolbar
           onRefresh={handleRefresh}
-          onExport={exportData}
+          onExport={() => exportData(selectedEvents)}
           loading={isLoading}
           stats={[
             {
@@ -162,80 +165,102 @@ export default function DataTransfer() {
               color: 'primary',
             },
           ]}
-          actions={[
-            {
-              id: 'refresh-data',
-              icon: <RefreshOutlined />,
-              tooltip: 'Refresh Data',
-              onClick: handleRefresh,
-              disabled: isLoading,
-            },
-          ]}
         />
       </Paper>
 
       {/* Main Table */}
-      <Table
-        data={data?.data ?? []}
-        columns={DATA_TRANSFER_COLUMNS}
-        rowKey="id"
-        loading={isLoading}
-        sortable
-        sortBy={sortBy}
-        sortDirection={sortDirection}
-        onSortChange={setSort}
-        filterable
-        filterValues={filters}
-        onFilterChange={setFilter}
-        pagination
-        page={page}
-        rowsPerPage={rowsPerPage}
-        totalRows={data?.total ?? 0}
-        onPageChange={setPage}
-        onRowsPerPageChange={setRowsPerPage}
-        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-        stickyHeader
-        maxHeight={600}
-        selectable
-        selectedRows={selectedRows}
-        onSelectionChange={handleSelectionChange}
-        maxSelection={5}
-        onCellClick={handleCellClick}
-        emptyMessage="No data transfer events found"
-        smartActions={[
-          {
-            id: 'view',
-            label: 'View Details',
-            onClick: (row) => console.log('View:', row),
-          },
-          {
-            id: 'export-row',
-            label: 'Export',
-            onClick: (row) => console.log('Export:', row),
-          },
-        ]}
-      />
+      <div className="min-h-0 flex-1">
+        <Table
+          data={data?.data ?? []}
+          columns={DATA_TRANSFER_COLUMNS}
+          rowKey="id"
+          loading={isLoading}
+          sortable
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onSortChange={setSort}
+          filterable
+          filterValues={filters}
+          onFilterChange={setFilter}
+          pagination
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalRows={data?.total ?? 0}
+          onPageChange={setPage}
+          onRowsPerPageChange={setRowsPerPage}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+          stickyHeader
+          maxHeight="100%"
+          selectable
+          selectedRows={selectedRows}
+          onSelectionChange={handleSelectionChange}
+          maxSelection={5}
+          onCellClick={handleCellClick}
+          emptyMessage="No data transfer events found"
+        />
+      </div>
 
-      {/* Detail Panel */}
-      <Collapse in={!!detailPanel}>
+      <Collapse in={!!detailPanel} unmountOnExit>
         {detailPanel && (
-          <Paper elevation={0} className="border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-              <Typography variant="subtitle1" fontWeight={600}>
-                User Details - {detailPanel.row.loggedInUser}
-              </Typography>
-              <IconButton size="small" onClick={handleCloseDetailPanel}>
+          <Paper elevation={0} className="overflow-hidden rounded-2xl border border-blue-500/30 bg-[#111827] shadow-lg shadow-black/20">
+            <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.04] px-5 py-4">
+              <div>
+                <Typography variant="subtitle1" fontWeight={800} className="text-white">User Details - {detailPanel.row.loggedInUser}</Typography>
+                <Typography variant="caption" className="text-gray-400">Logged in user profile summary</Typography>
+              </div>
+              <IconButton size="small" onClick={handleCloseDetailPanel} className="text-gray-300 hover:bg-white/10">
                 <CloseOutlined fontSize="small" />
               </IconButton>
             </div>
-            <div className="p-4">
-              <Table
-                data={userDetailData}
-                columns={USER_DETAIL_COLUMNS}
-                rowKey="emailId"
-                dense
-                stickyHeader={false}
-              />
+            <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
+              <Typography variant="caption" className="font-semibold text-gray-300">
+                User profile attributes
+              </Typography>
+              <Typography variant="caption" className="font-bold text-blue-400">
+                Scroll horizontally for more columns →
+              </Typography>
+            </div>
+            <div className="mx-5 mb-5 overflow-x-auto rounded-xl border border-white/10 [color-scheme:dark] [scrollbar-width:thin]">
+              {userDetailData.map((user) => (
+                <table key={user.emailId} className="min-w-[1180px] w-full border-collapse text-left text-xs">
+                  <thead className="bg-white/10 text-gray-200">
+                    <tr>
+                      {Object.keys({
+                        'Domain Name': user.domainName,
+                        'UPN / Logon Name': user.upnLogonName,
+                        'AD OU': user.adOU,
+                        'AD Groups': user.adGroups,
+                        'User Title': user.userTitle,
+                        'Email ID': user.emailId,
+                        Department: user.department,
+                        'Manager Name': user.managerName,
+                        'Manager Email ID': user.managerEmailId,
+                        'Manager Title': user.managerTitle,
+                      }).map((label) => (
+                        <th key={label} className="whitespace-nowrap border-b border-white/10 px-4 py-3 font-bold">{label}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      {Object.entries({
+                        'Domain Name': user.domainName,
+                        'UPN / Logon Name': user.upnLogonName,
+                        'AD OU': user.adOU,
+                        'AD Groups': user.adGroups,
+                        'User Title': user.userTitle,
+                        'Email ID': user.emailId,
+                        Department: user.department,
+                        'Manager Name': user.managerName,
+                        'Manager Email ID': user.managerEmailId,
+                        'Manager Title': user.managerTitle,
+                      }).map(([label, value]) => (
+                        <td key={label} className="border-b border-white/10 px-4 py-3">{value || '-'}</td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              ))}
             </div>
           </Paper>
         )}

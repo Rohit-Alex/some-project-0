@@ -12,6 +12,7 @@ import type {
   TransferTrendOverTime,
   SuspiciousTransfer,
 } from '../types'
+import { getTimeRangeConfig, generateTimeAwareDataPoints, formatDateForGranularity, formatDateForBackend } from '../../ApplicationControl/utils/timeRangeUtils'
 
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
 
@@ -108,35 +109,34 @@ export const generateMockDeptBlocked = (): DepartmentBlockedTransfers[] => [
   { department: 'IT', blockedCount: 67, fileTypes: { documents: 22, archives: 18, executables: 15, media: 12 } },
 ]
 
-export const generateMockAlertVolume = (): AlertIncidentTransfer[] => {
-  const data: AlertIncidentTransfer[] = []
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date.toISOString().split('T')[0],
-      alerts: randomInt(25, 95),
-      incidents: randomInt(8, 35),
-    })
-  }
-  return data
+export const generateMockAlertVolume = (timeRangeKey = '7d'): AlertIncidentTransfer[] => {
+  const config = getTimeRangeConfig(timeRangeKey)
+
+  return generateTimeAwareDataPoints(config, (date) => ({
+    date: formatDateForGranularity(date, config.granularity),
+    timestamp: formatDateForBackend(date, config.granularity),
+    alerts: randomInt(25, 95),
+    incidents: randomInt(8, 35),
+  }))
 }
 
-export const generateMockTransferTrend = (): TransferTrendOverTime[] => {
-  const data: TransferTrendOverTime[] = []
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    const allowed = randomInt(600, 1400)
-    const blocked = randomInt(80, 250)
-    data.push({
-      date: date.toISOString().split('T')[0],
+export const generateMockTransferTrend = (timeRangeKey = '7d'): TransferTrendOverTime[] => {
+  const config = getTimeRangeConfig(timeRangeKey)
+
+  return generateTimeAwareDataPoints(config, (date) => {
+    const allowedRange = config.granularity === 'hourly' ? [60, 220] : [600, 1400]
+    const blockedRange = config.granularity === 'hourly' ? [8, 40] : [80, 250]
+    const allowed = randomInt(allowedRange[0], allowedRange[1])
+    const blocked = randomInt(blockedRange[0], blockedRange[1])
+
+    return {
+      date: formatDateForGranularity(date, config.granularity),
+      timestamp: formatDateForBackend(date, config.granularity),
       allowed,
       blocked,
       total: allowed + blocked,
-    })
-  }
-  return data
+    }
+  })
 }
 
 export const generateMockSuspiciousTransfers = (): SuspiciousTransfer[] => [

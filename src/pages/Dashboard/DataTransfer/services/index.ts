@@ -35,6 +35,7 @@ import type {
 export interface WidgetParams extends DataTransferFilters {
   startDate?: string
   endDate?: string
+  timeRangeKey?: string
 }
 
 export const getDataTransferStats = async (params: WidgetParams): Promise<DataTransferStats> => {
@@ -112,7 +113,7 @@ export const getDepartmentBlocked = async (params: WidgetParams): Promise<Depart
 export const getAlertVolume = async (params: WidgetParams): Promise<AlertIncidentTransfer[]> => {
   return withMockData(
     () => apiGet<AlertIncidentTransfer[]>('/data-transfer/alert-volume', { params }),
-    generateMockAlertVolume,
+    () => generateMockAlertVolume(params.timeRangeKey),
     shouldUseMockData
   )
 }
@@ -120,7 +121,7 @@ export const getAlertVolume = async (params: WidgetParams): Promise<AlertInciden
 export const getTransferTrend = async (params: WidgetParams): Promise<TransferTrendOverTime[]> => {
   return withMockData(
     () => apiGet<TransferTrendOverTime[]>('/data-transfer/trend', { params }),
-    generateMockTransferTrend,
+    () => generateMockTransferTrend(params.timeRangeKey),
     shouldUseMockData
   )
 }

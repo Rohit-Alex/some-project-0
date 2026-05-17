@@ -4,7 +4,7 @@ import type { ColumnFilter, SelectOption } from './types';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
-import { TextField, Select, MenuItem, FormControl, IconButton, Popover, Stack, Button, Badge } from '@mui/material';
+import { TextField, Select, MenuItem, FormControl, IconButton, Popover, Stack, Button, Badge, Checkbox, ListItemText } from '@mui/material';
 
 interface ColumnFilterCellProps {
     columnId: string
@@ -18,7 +18,7 @@ export default function ColumnFilterCell({ columnId, filter, value, onChange }: 
 
     // Temporary state for filter values (before Apply)
     const [tempTextValue, setTempTextValue] = useState((value as string) || '');
-    const [tempSelectValue, setTempSelectValue] = useState((value as string) || '');
+    const [tempSelectValue, setTempSelectValue] = useState<string[]>(Array.isArray(value) ? value : value ? [value as string] : []);
     const [tempDateValue, setTempDateValue] = useState<Dayjs | null>(
         (value as string) ? dayjs(value as string) : null
     );
@@ -35,13 +35,15 @@ export default function ColumnFilterCell({ columnId, filter, value, onChange }: 
     const hasValue = (typeof value === 'string' && value) || (Array.isArray(value) && value.length > 0) ||
         (typeof value === 'object' && value && ((value as { start?: string }).start || (value as { end?: string }).end));
 
+    const normalizeSelectValue = () => Array.isArray(value) ? value : value ? [value as string] : [];
+
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
         // Initialize temp values with current values when opening
         if (filter.type === 'text') {
             setTempTextValue((value as string) || '');
         } else if (filter.type === 'select') {
-            setTempSelectValue((value as string) || '');
+            setTempSelectValue(normalizeSelectValue());
         } else if (filter.type === 'date') {
             setTempDateValue((value as string) ? dayjs(value as string) : null);
         } else if (filter.type === 'dateRange') {
@@ -78,7 +80,7 @@ export default function ColumnFilterCell({ columnId, filter, value, onChange }: 
         if (filter.type === 'text') {
             setTempTextValue((value as string) || '');
         } else if (filter.type === 'select') {
-            setTempSelectValue((value as string) || '');
+            setTempSelectValue(normalizeSelectValue());
         } else if (filter.type === 'date') {
             setTempDateValue((value as string) ? dayjs(value as string) : null);
         } else if (filter.type === 'dateRange') {
@@ -93,7 +95,7 @@ export default function ColumnFilterCell({ columnId, filter, value, onChange }: 
         switch (filter.type) {
             case 'text': setTempTextValue('');
                 break;
-            case 'select': setTempSelectValue('');
+            case 'select': setTempSelectValue([]);
                 break;
             case 'date': setTempDateValue(null);
                 break;
@@ -114,14 +116,12 @@ export default function ColumnFilterCell({ columnId, filter, value, onChange }: 
             case 'select':
                 return (
                     <FormControl size="small" fullWidth>
-                        <Select value={tempSelectValue} onChange={(e) => setTempSelectValue(e.target.value)} displayEmpty>
-                            <MenuItem value="">
-                                <em>{filter.placeholder || 'All'}</em>
-                            </MenuItem>
+                        <Select multiple value={tempSelectValue} onChange={(e) => setTempSelectValue(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)} displayEmpty renderValue={(selected) => selected.length ? selected.join(', ') : <em>{filter.placeholder || 'All'}</em>}>
 
                             {filter.options?.map((option: SelectOption) => (
                                 <MenuItem key={option.value} value={option.value}>
-                                    {option.label}
+                                    <Checkbox checked={tempSelectValue.includes(option.value)} />
+                                    <ListItemText primary={option.label} />
                                 </MenuItem>
                             ))}
                         </Select>

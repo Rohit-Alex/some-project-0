@@ -16,6 +16,7 @@ export const ENDPOINT_DEVICE_COLUMNS: Column<EndpointDevice>[] = [
         accessor: 'hostname',
         minWidth: 120,
         filter: { type: 'text', placeholder: 'Filter Search' },
+        clickable: true,
     },
     {
         id: 'ipAddress',

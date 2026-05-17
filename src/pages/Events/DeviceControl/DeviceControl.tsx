@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import Typography from '@mui/material/Typography'
 import Paper from '@mui/material/Paper'
-import RefreshOutlined from '@mui/icons-material/RefreshOutlined'
 import ComputerOutlined from '@mui/icons-material/ComputerOutlined'
 import BlockOutlined from '@mui/icons-material/BlockOutlined'
 import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined'
@@ -39,7 +38,7 @@ export default function DeviceControl() {
     setFilter,
     setTimeRange,
   } = useTableParams({
-    defaultRowsPerPage: 10,
+    defaultRowsPerPage: 100,
     defaultSortBy: 'eventTime',
     defaultSortDirection: 'desc',
   })
@@ -97,6 +96,10 @@ export default function DeviceControl() {
 
   const stats = data?.stats
 
+  const selectedEvents = useMemo(() => {
+    return (data?.data ?? []).filter((event) => selectedRows.includes(event.id))
+  }, [data?.data, selectedRows])
+
   // Build detail sections from data
   const detailSections: DetailSection[] = detailPanel?.data
     ? [
@@ -108,7 +111,7 @@ export default function DeviceControl() {
     : []
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-center justify-between">
         <Typography variant="h5">Device Control Events</Typography>
         <TimeRangeFilter value={timeRange} onChange={setTimeRange} />
@@ -118,7 +121,7 @@ export default function DeviceControl() {
       <Paper elevation={0} className="px-4 py-2 border border-gray-200 dark:border-gray-700">
         <TableToolbar
           onRefresh={handleRefresh}
-          onExport={exportData}
+          onExport={() => exportData(selectedEvents)}
           loading={isLoading}
           stats={[
             {
@@ -150,59 +153,40 @@ export default function DeviceControl() {
               color: 'primary',
             },
           ]}
-          actions={[
-            {
-              id: 'refresh-data',
-              icon: <RefreshOutlined />,
-              tooltip: 'Refresh Data',
-              onClick: handleRefresh,
-              disabled: isLoading,
-            },
-          ]}
         />
       </Paper>
 
       {/* Main Table */}
-      <Table
-        data={data?.data ?? []}
-        columns={DEVICE_CONTROL_COLUMNS}
-        rowKey="id"
-        loading={isLoading}
-        sortable
-        sortBy={sortBy}
-        sortDirection={sortDirection}
-        onSortChange={setSort}
-        filterable
-        filterValues={filters}
-        onFilterChange={setFilter}
-        pagination
-        page={page}
-        rowsPerPage={rowsPerPage}
-        totalRows={data?.total ?? 0}
-        onPageChange={setPage}
-        onRowsPerPageChange={setRowsPerPage}
-        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-        stickyHeader
-        maxHeight={600}
-        selectable
-        selectedRows={selectedRows}
-        onSelectionChange={handleSelectionChange}
-        maxSelection={5}
-        onRowClick={handleRowClick}
-        emptyMessage="No device control events found"
-        smartActions={[
-          {
-            id: 'view',
-            label: 'View Details',
-            onClick: handleRowClick,
-          },
-          {
-            id: 'export-row',
-            label: 'Export',
-            onClick: (row) => console.log('Export:', row),
-          },
-        ]}
-      />
+      <div className="min-h-0 flex-1">
+        <Table
+          data={data?.data ?? []}
+          columns={DEVICE_CONTROL_COLUMNS}
+          rowKey="id"
+          loading={isLoading}
+          sortable
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onSortChange={setSort}
+          filterable
+          filterValues={filters}
+          onFilterChange={setFilter}
+          pagination
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalRows={data?.total ?? 0}
+          onPageChange={setPage}
+          onRowsPerPageChange={setRowsPerPage}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+          stickyHeader
+          maxHeight="100%"
+          selectable
+          selectedRows={selectedRows}
+          onSelectionChange={handleSelectionChange}
+          maxSelection={5}
+          onRowClick={handleRowClick}
+          emptyMessage="No device control events found"
+        />
+      </div>
 
       {/* Detail Panel */}
       <DetailPanel
@@ -210,6 +194,7 @@ export default function DeviceControl() {
         title={`Event Details - ${detailPanel?.row.eventId ?? ''}`}
         sections={detailSections}
         onClose={handleCloseDetailPanel}
+        variant="drawer"
       />
     </div>
   )

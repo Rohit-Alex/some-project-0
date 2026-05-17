@@ -17,7 +17,7 @@ export default function FootprintWidget({ timeRangeKey, startDate, endDate }: Fo
     series: [{ name: 'Unique Applications', data: data?.map((f) => f.uniqueApps) ?? [] }],
   }
 
-  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
     // Open applications list filtered by the selected date
     if (opts?.dataPointIndex !== undefined && data?.[opts.dataPointIndex]) {
       const selectedData = data[opts.dataPointIndex]

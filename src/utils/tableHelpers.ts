@@ -42,12 +42,14 @@ export function getDateRangeFromTimeRange(timeRange: TimeRangeValue): {
  */
 export function filtersToApiParams(
   filters: Record<string, unknown>
-): Record<string, string> {
-  const result: Record<string, string> = {}
+): Record<string, string | string[]> {
+  const result: Record<string, string | string[]> = {}
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value) {
       if (typeof value === 'string') {
+        result[key] = value
+      } else if (Array.isArray(value)) {
         result[key] = value
       } else if (typeof value === 'object' && 'start' in (value as object)) {
         const dateRange = value as { start?: string; end?: string }

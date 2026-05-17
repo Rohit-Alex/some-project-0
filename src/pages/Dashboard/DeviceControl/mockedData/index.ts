@@ -11,6 +11,7 @@ import type {
   DeviceEventTrend,
   SuspiciousDevice,
 } from '../types'
+import { getTimeRangeConfig, generateTimeAwareDataPoints, formatDateForGranularity, formatDateForBackend } from '../../ApplicationControl/utils/timeRangeUtils'
 
 // Helper to generate random data
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
@@ -118,37 +119,36 @@ export const generateMockDeptBlocked = (): DepartmentBlockedAttempts[] => [
   { department: 'IT', blockedCount: 45, deviceTypes: { usbStorage: 15, smartphone: 10, cdDvd: 8, portableDevice: 5, printer: 3, bluetooth: 2, networkShare: 2 } },
 ]
 
-// Generate alert volume data (last 7 days)
-export const generateMockAlertVolume = (): AlertIncidentVolume[] => {
-  const data: AlertIncidentVolume[] = []
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date.toISOString().split('T')[0],
-      alerts: randomInt(20, 80),
-      incidents: randomInt(5, 25),
-    })
-  }
-  return data
+// Generate alert volume data
+export const generateMockAlertVolume = (timeRangeKey = '7d'): AlertIncidentVolume[] => {
+  const config = getTimeRangeConfig(timeRangeKey)
+
+  return generateTimeAwareDataPoints(config, (date) => ({
+    date: formatDateForGranularity(date, config.granularity),
+    timestamp: formatDateForBackend(date, config.granularity),
+    alerts: randomInt(20, 80),
+    incidents: randomInt(5, 25),
+  }))
 }
 
-// Generate event trend data (last 7 days)
-export const generateMockEventTrend = (): DeviceEventTrend[] => {
-  const data: DeviceEventTrend[] = []
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    const allowed = randomInt(500, 1200)
-    const blocked = randomInt(50, 200)
-    data.push({
-      date: date.toISOString().split('T')[0],
+// Generate event trend data
+export const generateMockEventTrend = (timeRangeKey = '7d'): DeviceEventTrend[] => {
+  const config = getTimeRangeConfig(timeRangeKey)
+
+  return generateTimeAwareDataPoints(config, (date) => {
+    const allowedRange = config.granularity === 'hourly' ? [50, 180] : [500, 1200]
+    const blockedRange = config.granularity === 'hourly' ? [5, 30] : [50, 200]
+    const allowed = randomInt(allowedRange[0], allowedRange[1])
+    const blocked = randomInt(blockedRange[0], blockedRange[1])
+
+    return {
+      date: formatDateForGranularity(date, config.granularity),
+      timestamp: formatDateForBackend(date, config.granularity),
       allowed,
       blocked,
       total: allowed + blocked,
-    })
-  }
-  return data
+    }
+  })
 }
 
 // Generate suspicious devices data

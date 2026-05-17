@@ -36,7 +36,8 @@ export function useTableParams(options: UseTableParamsOptions = {}) {
 
   // Parse current state from URL - use primitive values in dependency array
   const page = parseInt(searchParams.get('page') || '0', 10)
-  const rowsPerPage = parseInt(searchParams.get('limit') || String(defaultRowsPerPage), 10)
+  const parsedRowsPerPage = parseInt(searchParams.get('limit') || String(defaultRowsPerPage), 10)
+  const rowsPerPage = Math.max(parsedRowsPerPage, defaultRowsPerPage)
   const sortBy = searchParams.get('sortBy') || defaultSortBy
   const sortDirection = (searchParams.get('sortDir') as SortDirection) || defaultSortDirection
 
@@ -61,6 +62,8 @@ export function useTableParams(options: UseTableParamsOptions = {}) {
         if (value.includes('|')) {
           const [start, end] = value.split('|')
           result[filterKey] = { start, end }
+        } else if (value.includes(',')) {
+          result[filterKey] = value.split(',').filter(Boolean)
         } else {
           result[filterKey] = value
         }

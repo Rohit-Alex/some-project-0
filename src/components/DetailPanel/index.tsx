@@ -28,6 +28,8 @@ export interface DetailPanelProps {
   onClose: () => void
   /** Custom content to render after sections */
   children?: ReactNode
+  /** Display as a floating drawer instead of inline content */
+  variant?: 'inline' | 'drawer'
 }
 
 // ==============================|| DETAIL SECTION ||============================== //
@@ -134,10 +136,92 @@ export default function DetailPanel({
   sections,
   onClose,
   children,
+  variant = 'inline',
 }: DetailPanelProps) {
+  if (variant === 'drawer') {
+    return (
+      <Box
+        sx={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1300,
+          pointerEvents: open ? 'auto' : 'none',
+          opacity: open ? 1 : 0,
+          transition: 'opacity 0.2s ease-in-out',
+        }}
+      >
+        <Box onClick={onClose} sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0, 0, 0, 0.45)' }} />
+        <Paper
+          elevation={12}
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            bottom: 16,
+            width: { xs: 'calc(100% - 32px)', sm: 560, lg: 680 },
+            borderRadius: 3,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: 'background.paper',
+            transform: open ? 'translateX(0)' : 'translateX(24px)',
+            transition: 'transform 0.2s ease-in-out',
+          }}
+        >
+          <Box
+            sx={{
+              px: 3,
+              py: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: 1,
+              borderColor: 'divider',
+              bgcolor: 'action.hover',
+            }}
+          >
+            <Box>
+              <Typography variant="h6" fontWeight={700}>
+                {title}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Selected row details
+              </Typography>
+            </Box>
+            <IconButton size="small" onClick={onClose} aria-label="Close details">
+              <CloseOutlined fontSize="small" />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ p: 3, overflow: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                gap: 2.5,
+              }}
+            >
+              {sections.map((section, index) => (
+                <Paper key={section.title || index} elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default' }}>
+                  <DetailSectionComponent title={section.title} data={section.data} />
+                </Paper>
+              ))}
+            </Box>
+            {children && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                {children}
+              </>
+            )}
+          </Box>
+        </Paper>
+      </Box>
+    )
+  }
+
   return (
     <Collapse in={open}>
-      <Paper elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+      <Paper elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden', bgcolor: 'background.paper' }}>
         {/* Header */}
         <Box
           sx={{
@@ -160,7 +244,7 @@ export default function DetailPanel({
         </Box>
 
         {/* Content */}
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 2.5 }}>
           <Box
             sx={{
               display: 'grid',

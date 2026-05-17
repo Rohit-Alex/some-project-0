@@ -18,7 +18,7 @@ export default function DeptApplicationsWidget({ timeRangeKey, startDate, endDat
     series: [{ name: 'New Installs', data: sorted.map((d) => d.newInstalls) }],
   }
 
-  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
     // Open applications list filtered by the selected department
     if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
       const selectedDepartment = sorted[opts.dataPointIndex].department

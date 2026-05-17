@@ -27,7 +27,7 @@ export const generateMockApplicationFootprint = (timeRangeKey = '7d'): Applicati
   const config = getTimeRangeConfig(timeRangeKey)
   let baseApps = 450
 
-  return generateTimeAwareDataPoints(config, (date, index) => {
+  return generateTimeAwareDataPoints(config, (date) => {
     // Adjust growth rate based on granularity
     const growthRange = config.granularity === 'hourly' ? [-2, 5] : [-5, 15]
     const growth = randomInt(growthRange[0], growthRange[1])

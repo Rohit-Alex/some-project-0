@@ -18,20 +18,23 @@ export interface EndpointDevice {
 };
 
 export interface EndpointDeviceFilters {
-    hostname?: string
-    ipAddress?: string
-    systemStatus?: string
-    agentVersion?: string
-    os?: string
-    domain?: string
-    loggedInUser?: string
-    license?: string
+    hostname?: string | string[]
+    ipAddress?: string | string[]
+    systemStatus?: string | string[]
+    agentVersion?: string | string[]
+    os?: string | string[]
+    osDetails?: string | string[]
+    domain?: string | string[]
+    loggedInUser?: string | string[]
+    license?: string | string[]
+    rebootNeeded?: string | string[]
 };
 
 export interface EndpointDeviceStats {
     totalDevices: number
     onlineDevices: number
     offlineDevices: number
+    warningDevices: number
 
     softwareUpgrade: number
     softwareUninstall: number

@@ -7,6 +7,7 @@ import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined'
 import { KpiCard } from '@components/Widget'
 import { useDeviceControlStats, useEventTrend } from '../hooks'
 import { CHART_COLORS } from '../constants'
+import { openDeviceControlEventsByStatus } from '../utils/navigation'
 
 interface KpiStatsWidgetProps {
   timeRangeKey: string
@@ -33,6 +34,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineData={sparklineData}
           loading={isLoading}
           icon={<UsbOutlined color="primary" />}
+          onClick={() => openDeviceControlEventsByStatus('total', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -45,6 +47,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.allowed}
           loading={isLoading}
           icon={<CheckCircleOutlineOutlined color="success" />}
+          onClick={() => openDeviceControlEventsByStatus('allowed', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -57,6 +60,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.blocked}
           loading={isLoading}
           icon={<BlockOutlined color="error" />}
+          onClick={() => openDeviceControlEventsByStatus('blocked', timeRangeKey, startDate, endDate)}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -69,6 +73,7 @@ export default function KpiStatsWidget({ timeRangeKey, startDate, endDate }: Kpi
           sparklineColor={CHART_COLORS.alerted}
           loading={isLoading}
           icon={<WarningAmberOutlined color="warning" />}
+          onClick={() => openDeviceControlEventsByStatus('alerted', timeRangeKey, startDate, endDate)}
         />
       </Grid>
     </Grid>

@@ -18,7 +18,7 @@ export default function CategoryInventoryWidget({ timeRangeKey, startDate, endDa
     series: [{ name: 'Applications', data: sorted.map((c) => c.count) }],
   }
 
-  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
     // Open applications list filtered by the selected category
     if (opts?.dataPointIndex !== undefined && sorted[opts.dataPointIndex]) {
       const selectedCategory = sorted[opts.dataPointIndex].category

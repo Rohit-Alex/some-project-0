@@ -80,12 +80,14 @@ export interface DepartmentBlockedAttempts {
 
 export interface AlertIncidentVolume {
   date: string
+  timestamp?: string
   alerts: number
   incidents: number
 }
 
 export interface DeviceEventTrend {
   date: string
+  timestamp?: string
   allowed: number
   total: number
   blocked: number

@@ -90,7 +90,7 @@ export default function Table<T>({
     // Sticky column styles
     const getStickyStyles = (column: Column<T>, isHeader = false) => {
         const baseStyles = {
-            bgcolor: 'background.paper',
+            bgcolor: isHeader ? 'background.default' : 'background.paper',
         };
 
         if (column.sticky === 'left') {
@@ -98,7 +98,7 @@ export default function Table<T>({
                 ...baseStyles,
                 position: 'sticky' as const,
                 left: selectable ? 42 : 0,
-                zIndex: isHeader ? 3 : 2,
+                zIndex: isHeader ? 7 : 2,
             }
         }
         if (column.sticky === 'right') {
@@ -106,7 +106,7 @@ export default function Table<T>({
                 ...baseStyles,
                 position: 'sticky' as const,
                 right: smartActions ? 48 : 0,
-                zIndex: isHeader ? 3 : 2,
+                zIndex: isHeader ? 7 : 2,
             }
         }
         return {};
@@ -148,26 +148,26 @@ export default function Table<T>({
     const isRowInteractive = selectable || onRowClick;
 
     return (
-        <Paper elevation={elevation} className={className}>
-            <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined }}>
-                <MuiTable stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'}>
-                    <TableHead>
+        <Paper elevation={elevation} className={className} sx={{ height: maxHeight === '100%' ? '100%' : undefined, display: 'flex', flexDirection: 'column', minHeight: 0, border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden', bgcolor: 'background.paper' }}>
+            <TableContainer sx={{ maxHeight: stickyHeader ? maxHeight : undefined, overflow: 'auto', width: '100%', flex: maxHeight === '100%' ? 1 : undefined, minHeight: 0, scrollbarWidth: 'none', msOverflowStyle: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
+                <MuiTable stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'} sx={{ width: '100%', tableLayout: 'fixed' }}>
+                    <TableHead sx={{ '& .MuiTableCell-root': { bgcolor: 'background.default', position: stickyHeader ? 'sticky' : undefined, top: stickyHeader ? 0 : undefined, zIndex: stickyHeader ? 6 : undefined, boxShadow: stickyHeader ? '0 1px 0 rgba(255,255,255,0.08), 0 6px 12px rgba(0,0,0,0.18)' : undefined } }}>
                         <TableRow>              
                             {selectable && (
-                                <TableCell padding="checkbox" sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 4 }}>
+                                <TableCell padding="checkbox" sx={{ position: stickyHeader ? 'sticky' : undefined, top: stickyHeader ? 0 : undefined, left: 0, bgcolor: 'background.default', zIndex: 8, boxShadow: stickyHeader ? '0 1px 0 rgba(255,255,255,0.08), 0 6px 12px rgba(0,0,0,0.18)' : undefined }}>
                                     <Checkbox indeterminate={isIndeterminate} checked={isAllSelected} onChange={handleSelectAll} slotProps={{ input: { 'aria-label': 'select all' } }} />
                                 </TableCell>
                             )}
 
                             {columns.map((column) => (
-                                <TableCell key={column.id} align={column.align ?? 'left'} sx={{ minWidth: column.minWidth, width: column.width, whiteSpace: 'nowrap', ...getStickyStyles(column, true)}}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <TableCell key={column.id} align={column.align ?? 'left'} sx={{ minWidth: 0, width: column.width ?? column.minWidth, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 1.25, fontWeight: 700, bgcolor: 'background.default', borderColor: 'divider', ...getStickyStyles(column, true)}}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
                                         {sortable && column.sortable !== false ? (
                                             <TableSortLabel active={sortBy === column.id} direction={sortBy === column.id ? sortDirection : 'asc'} onClick={() => handleSort(column.id)}>
-                                                {column.label}
+                                                <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{column.label}</Box>
                                             </TableSortLabel>
                                         ) : (
-                                            column.label
+                                            <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{column.label}</Box>
                                         )}
 
                                         {filterable && column.filter && onFilterChange && (
@@ -226,10 +226,12 @@ export default function Table<T>({
                                         onClick={onRowClick ? (e: React.MouseEvent<HTMLTableRowElement>) => handleRowClick(row, rowIndex, e) : undefined}
                                         classes={{ selected: '!bg-transparent' }}
                                         sx={{
-                                            '&:last-child td, &:last-child th': { border: 0 },
+                                            '&:last-child td, &:last-child th': { borderBottom: 0 },
+                                            '&:nth-of-type(even)': { bgcolor: 'action.hover' },
                                             ...(isRowInteractive && {
                                                 cursor: 'pointer',
                                                 transition: 'background-color 0.15s ease-in-out',
+                                            '&:hover': { bgcolor: 'action.selected' },
                                             }),
                                             ...(selected && {
                                                 bgcolor: 'action.selected',
@@ -255,6 +257,13 @@ export default function Table<T>({
                                                 column.clickable && onCellClick ? () => onCellClick(column.id, row, rowIndex) : undefined
                                             }
                                             sx={{
+                                                minWidth: 0,
+                                                width: column.width ?? column.minWidth,
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                py: dense ? 0.75 : 1.25,
+                                                borderColor: 'divider',
                                                 ...getStickyStyles(column),
                                                 ...getClickableCellStyles(column),
                                             }}
@@ -287,6 +296,7 @@ export default function Table<T>({
                     rowsPerPageOptions={rowsPerPageOptions}
                     onPageChange={handlePageChange}
                     onRowsPerPageChange={handleRowsPerPageChange}
+                    sx={{ overflow: 'hidden', borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper', minHeight: 52 }}
                 />
             )}
         </Paper>

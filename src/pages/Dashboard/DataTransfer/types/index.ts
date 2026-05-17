@@ -86,12 +86,14 @@ export interface DepartmentBlockedTransfers {
 
 export interface AlertIncidentTransfer {
   date: string
+  timestamp?: string
   alerts: number
   incidents: number
 }
 
 export interface TransferTrendOverTime {
   date: string
+  timestamp?: string
   allowed: number
   total: number
   blocked: number

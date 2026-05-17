@@ -21,7 +21,7 @@ export default function BlockByCategoryWidget({ timeRangeKey, startDate, endDate
     ],
   }
 
-  const handleDataPointClick = (event: any, chartContext: any, opts: any) => {
+  const handleDataPointClick = (_event: any, _chartContext: any, opts: any) => {
     // Open applications list filtered by the selected category
     if (opts?.dataPointIndex !== undefined && data?.[opts.dataPointIndex]) {
       const selectedCategory = data[opts.dataPointIndex].category
