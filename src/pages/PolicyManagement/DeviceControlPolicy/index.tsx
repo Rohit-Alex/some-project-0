@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
@@ -20,6 +20,7 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Alert from '@mui/material/Alert'
 import Snackbar from '@mui/material/Snackbar'
+import Switch from '@mui/material/Switch'
 import AddCircleOutlineOutlined from '@mui/icons-material/AddCircleOutlineOutlined'
 import EditOutlined from '@mui/icons-material/EditOutlined'
 import DeleteOutlineOutlined from '@mui/icons-material/DeleteOutlineOutlined'
@@ -68,9 +69,12 @@ interface DevicePolicyRow {
   generateEvent: boolean
   alertManager: boolean
   recycleBin: boolean
+  policySchedule?: string
 }
 
 interface DeviceOption {
+  uid: string
+  id: string
   name: string
   type: string
   serial: string
@@ -88,6 +92,15 @@ interface PolicyFormState {
   allowObex: boolean
   allowMappingShares: boolean
   selectedDevices: string[]
+  assignments: AssignmentState
+  policySchedule: string
+}
+
+interface AssignmentState {
+  users: string[]
+  userGroups: string[]
+  hostNames: string[]
+  hostGroups: string[]
 }
 
 const defaultPolicyRows: DefaultPolicyRow[] = [
@@ -122,6 +135,7 @@ const policyRows: DevicePolicyRow[] = [
     generateEvent: false,
     alertManager: false,
     recycleBin: false,
+    policySchedule: '',
   },
   {
     id: 2,
@@ -141,8 +155,16 @@ const policyRows: DevicePolicyRow[] = [
     generateEvent: false,
     alertManager: false,
     recycleBin: false,
+    policySchedule: '',
   },
 ]
+
+const defaultAssignments: AssignmentState = {
+  users: ['Vikram'],
+  userGroups: ['All User Group'],
+  hostNames: ['desktop-01'],
+  hostGroups: ['All Host Groups'],
+}
 
 const categories: DeviceCategory[] = ['Removable Storage', 'Mobile Phones', 'Printers', 'Network Share', 'Bluetooth']
 
@@ -156,24 +178,25 @@ const subCategoryOptions: Record<DeviceCategory, string[]> = {
 
 const devicesByCategory: Record<DeviceCategory, DeviceOption[]> = {
   'Removable Storage': [
-    { name: 'Kingston', type: 'Pen Drive', serial: '12345abc' },
-    { name: 'SanDisk', type: 'USB Storage', serial: '98765xyz' },
+    { uid: 'removable-storage-1', id: 'DEV-USB-001', name: 'Kingston', type: 'Pen Drive', serial: '12345abc' },
+    { uid: 'removable-storage-2', id: 'DEV-USB-002', name: 'SanDisk', type: 'USB Storage', serial: '98765xyz' },
+    { uid: 'removable-storage-3', id: 'DEV-USB-003', name: 'Removable Storage Device 3', type: 'Removable Storage', serial: 'REM-5927' },
   ],
   'Mobile Phones': [
-    { name: 'iPhone', type: 'iOS', serial: 'APL-2837' },
-    { name: 'Samsung', type: 'Android', serial: 'SM-9901' },
+    { uid: 'mobile-phones-1', id: 'DEV-MOB-001', name: 'iPhone', type: 'iOS', serial: 'APL-2837' },
+    { uid: 'mobile-phones-2', id: 'DEV-MOB-002', name: 'Samsung', type: 'Android', serial: 'SM-9901' },
   ],
   Printers: [
-    { name: 'HP LaserJet', type: 'Local Printer', serial: 'HP-4455' },
-    { name: 'Canon Office', type: 'Network Printer', serial: 'CN-1122' },
+    { uid: 'printers-1', id: 'DEV-PRN-001', name: 'HP LaserJet', type: 'Local Printer', serial: 'HP-4455' },
+    { uid: 'printers-2', id: 'DEV-PRN-002', name: 'Canon Office', type: 'Network Printer', serial: 'CN-1122' },
   ],
   'Network Share': [
-    { name: 'Finance Share', type: 'Network Share', serial: 'SHARE-01' },
-    { name: 'Project Share', type: 'Network Share', serial: 'SHARE-02' },
+    { uid: 'network-share-1', id: 'DEV-SHR-001', name: 'Finance Share', type: 'Network Share', serial: 'SHARE-01' },
+    { uid: 'network-share-2', id: 'DEV-SHR-002', name: 'Project Share', type: 'Network Share', serial: 'SHARE-02' },
   ],
   Bluetooth: [
-    { name: 'Bluetooth Adapter', type: 'Bluetooth', serial: 'BT-7788' },
-    { name: 'OBEX Device', type: 'Bluetooth Transfer', serial: 'OBEX-12' },
+    { uid: 'bluetooth-1', id: 'DEV-BT-001', name: 'Bluetooth Adapter', type: 'Bluetooth', serial: 'BT-7788' },
+    { uid: 'bluetooth-2', id: 'DEV-BT-002', name: 'OBEX Device', type: 'Bluetooth Transfer', serial: 'OBEX-12' },
   ],
 }
 
@@ -189,6 +212,8 @@ const initialForm: PolicyFormState = {
   allowObex: false,
   allowMappingShares: false,
   selectedDevices: [],
+  assignments: defaultAssignments,
+  policySchedule: '',
 }
 
 function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
@@ -320,10 +345,21 @@ interface PolicyListPageProps {
   onEdit: () => void
   onDelete: () => void
   onExport: () => void
+  onExportJson: () => void
   onImport: (event: ChangeEvent<HTMLInputElement>) => void
+  onToggleState?: (policyId: number, enabled: boolean) => void
+  onMovePriority?: (policyId: number, direction: 'up' | 'down') => void
+  hasPendingChanges?: boolean
+  onSaveChanges?: () => void
+  onCancelChanges?: () => void
+  showCreateButton?: boolean
 }
 
-function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit, onDelete, onExport, onImport }: PolicyListPageProps) {
+function isDefaultPolicy(policy: DevicePolicyRow) {
+  return policy.deviceSubCategory === 'Default' || policy.name.toLowerCase().includes('critical')
+}
+
+function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit, onDelete, onExport, onExportJson, onImport, onToggleState, onMovePriority, hasPendingChanges, onSaveChanges, onCancelChanges, showCreateButton = false }: PolicyListPageProps) {
   return (
     <div className="flex flex-col gap-4">
       <SectionCard title="Device Control Policy List" subtitle="Create, edit, delete, import, export, and assign device policies">
@@ -339,14 +375,20 @@ function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit
               </IconButton>
             </Tooltip>
             <Tooltip title="Download CSV"><IconButton color="info" onClick={onExport}><FileDownloadOutlined /></IconButton></Tooltip>
+            <Tooltip title="Export Policies JSON"><IconButton color="secondary" onClick={onExportJson}><FileDownloadOutlined /></IconButton></Tooltip>
           </Stack>
-          <Button variant="contained" startIcon={<AddCircleOutlineOutlined />} onClick={onCreate}>Create New Policy</Button>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {hasPendingChanges && <Chip color="warning" size="small" label="Unsaved priority/state changes" className="animate-pulse" />}
+            {hasPendingChanges && <Button size="small" variant="contained" onClick={onSaveChanges}>Save Changes</Button>}
+            {hasPendingChanges && <Button size="small" variant="outlined" onClick={onCancelChanges}>Cancel</Button>}
+            {showCreateButton && <Button variant="contained" startIcon={<AddCircleOutlineOutlined />} onClick={onCreate}>Create New Policy</Button>}
+          </Stack>
         </div>
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-          <table className="min-w-[1500px] w-full border-collapse text-left text-xs">
+          <table className="min-w-[1720px] w-full border-collapse text-left text-xs">
             <thead className="bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200">
               <tr>
-                {['Policy Priority', 'Policy Name', 'Description', 'User', 'User Group', 'Host Names', 'Host Group', 'Device Category', 'Device Sub Category', 'Device Details', 'Policy State', 'Policy Action', 'User Notification', 'Generate Event', 'Alert Manager', 'Policy Schedule with Recycle Previlege'].map((label) => (
+                {['Policy Priority', 'Move', 'Policy Name', 'Description', 'User', 'User Group', 'Host Names', 'Host Group', 'Device Category', 'Device Sub Category', 'Device Details', 'Policy State', 'Policy Action', 'User Notification', 'Generate Event', 'Alert Manager', 'Policy Schedule'].map((label) => (
                   <th key={label} className="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-bold dark:border-gray-700">{label}</th>
                 ))}
               </tr>
@@ -359,6 +401,10 @@ function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit
                   className={`cursor-pointer border-t border-gray-200 transition dark:border-gray-700 ${selectedPolicyId === row.id ? 'bg-blue-50 dark:bg-blue-950/30' : 'hover:bg-blue-50 dark:hover:bg-blue-950/20'}`}
                 >
                   <td className="px-4 py-3 font-bold">{row.priority}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <Button size="small" disabled={isDefaultPolicy(row)} onClick={(event) => { event.stopPropagation(); onMovePriority?.(row.id, 'up') }}>Up</Button>
+                    <Button size="small" disabled={isDefaultPolicy(row)} onClick={(event) => { event.stopPropagation(); onMovePriority?.(row.id, 'down') }}>Down</Button>
+                  </td>
                   <td className="px-4 py-3 font-semibold">{row.name}</td>
                   <td className="max-w-[220px] px-4 py-3"><span className="block truncate" title={row.description}>{row.description}</span></td>
                   <td className="px-4 py-3">{row.user}</td>
@@ -368,12 +414,15 @@ function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit
                   <td className="px-4 py-3">{row.deviceCategory}</td>
                   <td className="px-4 py-3">{row.deviceSubCategory}</td>
                   <td className="px-4 py-3">{row.deviceDetails}</td>
-                  <td className="px-4 py-3"><Chip size="small" color={row.policyState === 'Enabled' ? 'success' : 'default'} label={row.policyState} /></td>
+                  <td className="px-4 py-3">
+                    <Switch size="small" checked={row.policyState === 'Enabled'} disabled={isDefaultPolicy(row)} onClick={(event) => event.stopPropagation()} onChange={(event) => onToggleState?.(row.id, event.target.checked)} />
+                    <Chip size="small" color={row.policyState === 'Enabled' ? 'success' : 'default'} label={row.policyState} />
+                  </td>
                   <td className="px-4 py-3">{row.policyAction}</td>
                   <td className="px-4 py-2 text-center"><FlagCell checked={row.userNotification} /></td>
                   <td className="px-4 py-2 text-center"><FlagCell checked={row.generateEvent} /></td>
                   <td className="px-4 py-2 text-center"><FlagCell checked={row.alertManager} /></td>
-                  <td className="px-4 py-2 text-center"><FlagCell checked={row.recycleBin} /></td>
+                  <td className="px-4 py-2">{row.policySchedule || 'Not time bound'}</td>
                 </tr>
               ))}
             </tbody>
@@ -386,25 +435,47 @@ function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit
 
 function DeviceSelector({ category, selectedDevices, onSelectedDevicesChange }: { category: DeviceCategory; selectedDevices: string[]; onSelectedDevicesChange: (serials: string[]) => void }) {
   const [devices, setDevices] = useState<DeviceOption[]>(devicesByCategory[category])
+  const [search, setSearch] = useState('')
+  const [editingUid, setEditingUid] = useState<string | null>(null)
+  const filteredDevices = devices.filter((device) => [device.name, device.type, device.id, device.serial].some((value) => value.toLowerCase().includes(search.toLowerCase())))
 
   useEffect(() => {
     setDevices(devicesByCategory[category])
+    setEditingUid(null)
     onSelectedDevicesChange([])
   }, [category])
 
   const handleAddDevice = () => {
     const nextNumber = devices.length + 1
     const nextDevice: DeviceOption = {
+      uid: `${category.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+      id: `${category.replace(/\s+/g, '-').toUpperCase()}-${String(Date.now()).slice(-5)}`,
       name: `${category} Device ${nextNumber}`,
       type: category,
       serial: `${category.replace(/\s+/g, '-').toUpperCase()}-${String(Date.now()).slice(-5)}`,
     }
     setDevices((current) => [...current, nextDevice])
     onSelectedDevicesChange([...selectedDevices, nextDevice.serial])
+    setEditingUid(nextDevice.uid)
   }
 
   const toggleDevice = (serial: string, checked: boolean) => {
     onSelectedDevicesChange(checked ? [...selectedDevices, serial] : selectedDevices.filter((item) => item !== serial))
+  }
+
+  const updateDevice = (uid: string, field: keyof DeviceOption, value: string) => {
+    const previousSerial = devices.find((device) => device.uid === uid)?.serial
+    setDevices((current) => current.map((device) => device.uid === uid ? { ...device, [field]: value } : device))
+    if (field === 'serial' && previousSerial && selectedDevices.includes(previousSerial)) {
+      onSelectedDevicesChange(selectedDevices.map((item) => item === previousSerial ? value : item))
+    }
+  }
+
+  const deleteDevice = (uid: string) => {
+    const serial = devices.find((device) => device.uid === uid)?.serial
+    setDevices((current) => current.filter((device) => device.uid !== uid))
+    if (serial) onSelectedDevicesChange(selectedDevices.filter((item) => item !== serial))
+    if (editingUid === uid) setEditingUid(null)
   }
 
   const handleImportDevices = (event: ChangeEvent<HTMLInputElement>) => {
@@ -416,11 +487,14 @@ function DeviceSelector({ category, selectedDevices, onSelectedDevicesChange }: 
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean)
-      const importedDevices = lines.map((line, index) => {
-        const [name, type, serial] = line.split(',').map((value) => value?.trim())
+      const dataLines = lines[0]?.toLowerCase().includes('device name') ? lines.slice(1) : lines
+      const importedDevices = dataLines.map((line, index) => {
+        const [name, type, id, serial] = line.split(',').map((value) => value?.trim())
         return {
+          uid: `${category.replace(/\s+/g, '-').toLowerCase()}-import-${Date.now()}-${index}`,
           name: name || `${category} Imported ${index + 1}`,
           type: type || category,
+          id: id || `${category.replace(/\s+/g, '-').toUpperCase()}-IMPORT-${index + 1}`,
           serial: serial || `${category.replace(/\s+/g, '-').toUpperCase()}-IMPORT-${index + 1}`,
         }
       })
@@ -443,25 +517,51 @@ function DeviceSelector({ category, selectedDevices, onSelectedDevicesChange }: 
           <Button size="small" startIcon={<AddCircleOutlineOutlined />} onClick={handleAddDevice}>Add</Button>
         </Stack>
       </div>
+      <div className="border-b border-gray-200 p-3 dark:border-gray-700">
+        <TextField fullWidth size="small" placeholder="Search by device name, type, device id, or serial number" value={search} onChange={(event) => setSearch(event.target.value)} InputProps={{ startAdornment: <SearchOutlined fontSize="small" className="mr-2 text-gray-400" /> }} />
+      </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-left text-xs">
+        <table className="w-full min-w-[760px] text-left text-xs">
           <thead className="bg-gray-100 dark:bg-white/10">
             <tr>
               <th className="px-3 py-2">Select</th>
               <th className="px-3 py-2">Device Name</th>
               <th className="px-3 py-2">Device Type</th>
+              <th className="px-3 py-2">Device ID</th>
               <th className="px-3 py-2">Device Serial</th>
+              <th className="px-3 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
-            {devices.map((device) => (
-              <tr key={device.serial} className="border-t border-gray-200 dark:border-gray-700">
-                <td className="px-3 py-2"><Checkbox size="small" checked={selectedDevices.includes(device.serial)} onChange={(event) => toggleDevice(device.serial, event.target.checked)} /></td>
-                <td className="px-3 py-2 font-semibold">{device.name}</td>
-                <td className="px-3 py-2">{device.type}</td>
-                <td className="px-3 py-2">{device.serial}</td>
+            {filteredDevices.map((device) => {
+              const isEditing = editingUid === device.uid
+              return (
+                <tr key={device.uid} className="border-t border-gray-200 dark:border-gray-700">
+                  <td className="px-3 py-2"><Checkbox size="small" checked={selectedDevices.includes(device.serial)} onChange={(event) => toggleDevice(device.serial, event.target.checked)} /></td>
+                  <td className="px-3 py-2 font-semibold">
+                    {isEditing ? <TextField size="small" value={device.name} onChange={(event) => updateDevice(device.uid, 'name', event.target.value)} /> : device.name}
+                  </td>
+                  <td className="px-3 py-2">
+                    {isEditing ? <TextField size="small" value={device.type} onChange={(event) => updateDevice(device.uid, 'type', event.target.value)} /> : device.type}
+                  </td>
+                  <td className="px-3 py-2">
+                    {isEditing ? <TextField size="small" value={device.id} onChange={(event) => updateDevice(device.uid, 'id', event.target.value)} /> : device.id}
+                  </td>
+                  <td className="px-3 py-2">
+                    {isEditing ? <TextField size="small" value={device.serial} onChange={(event) => updateDevice(device.uid, 'serial', event.target.value)} /> : device.serial}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2">
+                    <Button size="small" onClick={() => setEditingUid(isEditing ? null : device.uid)}>{isEditing ? 'Done' : 'Edit'}</Button>
+                    <IconButton size="small" color="error" onClick={() => deleteDevice(device.uid)}><DeleteOutlineOutlined fontSize="small" /></IconButton>
+                  </td>
+                </tr>
+              )
+            })}
+            {!filteredDevices.length && (
+              <tr>
+                <td colSpan={6} className="px-3 py-6 text-center text-gray-500">No devices found</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -483,6 +583,13 @@ function policyToForm(policy: DevicePolicyRow | null): PolicyFormState {
     allowObex: policy.policyAction.includes('OBEX'),
     allowMappingShares: policy.policyAction.includes('Mapping'),
     selectedDevices: policy.deviceDetails && policy.deviceDetails !== 'Default' && policy.deviceDetails !== 'N/A' ? policy.deviceDetails.split(',').map((device) => device.trim()) : [],
+    assignments: {
+      users: policy.user && policy.user !== '-' ? policy.user.split(',').map((value) => value.trim()) : defaultAssignments.users,
+      userGroups: policy.userGroup && policy.userGroup !== '-' ? policy.userGroup.split(',').map((value) => value.trim()) : defaultAssignments.userGroups,
+      hostNames: policy.hostNames && policy.hostNames !== '-' ? policy.hostNames.split(',').map((value) => value.trim()) : defaultAssignments.hostNames,
+      hostGroups: policy.hostGroup && policy.hostGroup !== '-' ? policy.hostGroup.split(',').map((value) => value.trim()) : defaultAssignments.hostGroups,
+    },
+    policySchedule: policy.policySchedule ?? '',
   }
 }
 
@@ -496,6 +603,10 @@ function PolicyForm({ onBack, onSave, editingPolicy }: { onBack?: () => void; on
   const handleCategoryChange = (event: SelectChangeEvent<DeviceCategory>) => {
     const category = event.target.value as DeviceCategory
     setForm((current) => ({ ...current, category, subCategory: subCategoryOptions[category][0] }))
+  }
+
+  const updateAssignment = (key: keyof AssignmentState, values: string[]) => {
+    update('assignments', { ...form.assignments, [key]: values })
   }
 
   return (
@@ -538,6 +649,7 @@ function PolicyForm({ onBack, onSave, editingPolicy }: { onBack?: () => void; on
               </div>
             ))}
           </div>
+          <AssignmentEditor assignments={form.assignments} onChange={updateAssignment} schedule={form.policySchedule} onScheduleChange={(value) => update('policySchedule', value)} />
           <div className="flex gap-2 md:col-span-2">
             <Button variant="contained" startIcon={<SaveOutlined />} onClick={() => onSave?.(form)}>{editingPolicy ? 'Update' : 'Save'}</Button>
             <Button variant="outlined" startIcon={<RestartAltOutlined />} onClick={() => setForm(initialForm)}>Clear</Button>
@@ -553,7 +665,7 @@ function PolicyForm({ onBack, onSave, editingPolicy }: { onBack?: () => void; on
             <Chip icon={<AssignmentTurnedInOutlined />} label={`Action: ${form.action}`} color={form.action === 'Block' ? 'error' : 'success'} />
           </Stack>
           <Typography variant="body2" color="text.secondary" className="mt-4">
-            Once saved, this policy can be assigned to users, user groups, host names, and host groups from the assignment page.
+            Once saved, this policy remains disabled until it is manually enabled from Policy List. Assignment is saved with users, user groups, host names, host groups, and schedule.
           </Typography>
         </Paper>
       </div>
@@ -561,67 +673,41 @@ function PolicyForm({ onBack, onSave, editingPolicy }: { onBack?: () => void; on
   )
 }
 
-function AssignmentPage() {
-  const lists = useMemo(() => [
-    { title: 'Users', values: ['Vikram', 'Admin', 'User1'] },
-    { title: 'Users Group', values: ['All User Group', 'Sales Team', 'Finance'] },
-    { title: 'Host Names', values: ['desktop-01', 'laptop-02', 'server-03'] },
-    { title: 'Host Groups', values: ['All Host Groups', 'Engineering', 'Marketing'] },
-  ], [])
-  const initialAssignments = useMemo(() => lists.reduce<Record<string, string[]>>((acc, list) => {
-    acc[list.title] = list.values.slice(0, 1)
-    return acc
-  }, {}), [lists])
+function AssignmentEditor({ assignments, onChange, schedule, onScheduleChange }: { assignments: AssignmentState; onChange: (key: keyof AssignmentState, values: string[]) => void; schedule: string; onScheduleChange: (value: string) => void }) {
+  const lists = [
+    { key: 'users' as const, title: 'Users', values: ['Vikram', 'Admin', 'User1'] },
+    { key: 'userGroups' as const, title: 'Users Group', values: ['All User Group', 'Sales Team', 'Finance'] },
+    { key: 'hostNames' as const, title: 'Host Names', values: ['desktop-01', 'laptop-02', 'server-03'] },
+    { key: 'hostGroups' as const, title: 'Host Groups', values: ['All Host Groups', 'Engineering', 'Marketing'] },
+  ]
   const [searches, setSearches] = useState<Record<string, string>>({})
-  const [assignments, setAssignments] = useState<Record<string, string[]>>(initialAssignments)
-  const [schedule, setSchedule] = useState('')
-  const [order, setOrder] = useState('')
-  const [message, setMessage] = useState('')
 
-  const toggleAssignment = (title: string, value: string, checked: boolean) => {
-    setAssignments((current) => ({
-      ...current,
-      [title]: checked ? [...(current[title] ?? []), value] : (current[title] ?? []).filter((item) => item !== value),
-    }))
-  }
-
-  const resetAssignment = () => {
-    setAssignments(initialAssignments)
-    setSearches({})
-    setSchedule('')
-    setOrder('')
-    setMessage('Policy assignment reset successfully')
+  const toggleAssignment = (key: keyof AssignmentState, value: string, checked: boolean) => {
+    const current = assignments[key] ?? []
+    onChange(key, checked ? [...current, value] : current.filter((item) => item !== value))
   }
 
   return (
-    <SectionCard title="Policy Assignment" subtitle="Assign selected policies to users, groups, hosts, and schedule order">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="md:col-span-2 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+      <Typography variant="subtitle2" fontWeight={800}>Policy Assignment</Typography>
+      <Typography variant="caption" color="text.secondary">Assign before saving. New policies are saved disabled until manually enabled in Policy List.</Typography>
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {lists.map((list) => (
-          <Paper key={list.title} elevation={0} className="rounded-xl border border-gray-200 p-3 dark:border-gray-700">
-            <TextField fullWidth size="small" placeholder="Search" value={searches[list.title] ?? ''} onChange={(event) => setSearches((current) => ({ ...current, [list.title]: event.target.value }))} InputProps={{ startAdornment: <SearchOutlined fontSize="small" className="mr-2 text-gray-400" /> }} />
-            <div className="mt-3 h-48 overflow-auto rounded-lg border border-gray-200 p-2 dark:border-gray-700">
+          <Paper key={list.key} elevation={0} className="rounded-xl border border-gray-200 p-3 dark:border-gray-700">
+            <TextField fullWidth size="small" placeholder="Search" value={searches[list.key] ?? ''} onChange={(event) => setSearches((current) => ({ ...current, [list.key]: event.target.value }))} InputProps={{ startAdornment: <SearchOutlined fontSize="small" className="mr-2 text-gray-400" /> }} />
+            <div className="mt-3 h-36 overflow-auto rounded-lg border border-gray-200 p-2 dark:border-gray-700">
               {list.values
-                .filter((value) => value.toLowerCase().includes((searches[list.title] ?? '').toLowerCase()))
+                .filter((value) => value.toLowerCase().includes((searches[list.key] ?? '').toLowerCase()))
                 .map((value) => (
-                  <FormControlLabel key={value} control={<Checkbox size="small" checked={(assignments[list.title] ?? []).includes(value)} onChange={(event) => toggleAssignment(list.title, value, event.target.checked)} />} label={value} className="block" />
+                  <FormControlLabel key={value} control={<Checkbox size="small" checked={(assignments[list.key] ?? []).includes(value)} onChange={(event) => toggleAssignment(list.key, value, event.target.checked)} />} label={value} className="block" />
                 ))}
             </div>
             <Typography variant="caption" color="text.secondary" className="mt-2 block text-center">{list.title}</Typography>
           </Paper>
         ))}
       </div>
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <TextField label="Policy Schedule" size="small" placeholder="From Date / Time to Date / Time" value={schedule} onChange={(event) => setSchedule(event.target.value)} />
-        <TextField label="Policy Order" size="small" placeholder="Top / Bottom / After Policy Number" value={order} onChange={(event) => setOrder(event.target.value)} />
-      </div>
-      <div className="mt-4 flex gap-2">
-        <Button variant="contained" startIcon={<SaveOutlined />} onClick={() => setMessage('Policy assignment saved successfully')}>Save</Button>
-        <Button variant="outlined" startIcon={<RestartAltOutlined />} onClick={resetAssignment}>Reset</Button>
-      </div>
-      <Snackbar open={!!message} autoHideDuration={2500} onClose={() => setMessage('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Alert severity="success" variant="filled" onClose={() => setMessage('')}>{message}</Alert>
-      </Snackbar>
-    </SectionCard>
+      <TextField fullWidth label="Policy Schedule" size="small" placeholder="From Date / Time to Date / Time. Leave blank for non-time-bound policy." value={schedule} onChange={(event) => onScheduleChange(event.target.value)} className="!mt-4" />
+    </div>
   )
 }
 
@@ -637,19 +723,20 @@ function createPolicyFromForm(form: PolicyFormState, id: number, priority: numbe
     priority,
     name: form.policyName || `${form.category} Policy`,
     description: form.description || `Policy for ${form.category}`,
-    user: 'All Users',
-    userGroup: 'All User Group',
-    hostNames: 'All Host Groups',
-    hostGroup: 'All Host Groups',
+    user: form.assignments.users.join(', ') || '-',
+    userGroup: form.assignments.userGroups.join(', ') || '-',
+    hostNames: form.assignments.hostNames.join(', ') || '-',
+    hostGroup: form.assignments.hostGroups.join(', ') || '-',
     deviceCategory: form.category,
     deviceSubCategory: form.subCategory,
     deviceDetails: form.selectedDevices.length ? form.selectedDevices.join(', ') : devicesByCategory[form.category][0]?.serial ?? 'Default',
-    policyState: 'Enabled',
+    policyState: 'Disabled',
     policyAction,
     userNotification: form.userNotification === 'Yes',
     generateEvent: form.generateEvent === 'Yes',
     alertManager: form.managerNotification === 'Yes',
     recycleBin: false,
+    policySchedule: form.policySchedule,
   }
 }
 
@@ -664,7 +751,7 @@ function downloadTextFile(fileName: string, content: string, type: string) {
 }
 
 function exportPoliciesToCsv(policies: DevicePolicyRow[]) {
-  const headers = ['Priority', 'Policy Name', 'Description', 'User', 'User Group', 'Host Names', 'Host Group', 'Device Category', 'Device Sub Category', 'Device Details', 'Policy State', 'Policy Action', 'User Notification', 'Generate Event', 'Alert Manager']
+  const headers = ['Priority', 'Policy Name', 'Description', 'User', 'User Group', 'Host Names', 'Host Group', 'Device Category', 'Device Sub Category', 'Device Details', 'Policy State', 'Policy Action', 'User Notification', 'Generate Event', 'Alert Manager', 'Policy Schedule']
   const rows = policies.map((policy) => [
     policy.priority,
     policy.name,
@@ -681,9 +768,14 @@ function exportPoliciesToCsv(policies: DevicePolicyRow[]) {
     policy.userNotification ? 'Yes' : 'No',
     policy.generateEvent ? 'Yes' : 'No',
     policy.alertManager ? 'Yes' : 'No',
+    policy.policySchedule || 'Not time bound',
   ])
   const csv = [headers, ...rows].map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n')
   downloadTextFile('device-control-policies.csv', csv, 'text/csv;charset=utf-8')
+}
+
+function exportPoliciesToJson(policies: DevicePolicyRow[]) {
+  downloadTextFile('device-control-policies-backup.json', JSON.stringify(policies, null, 2), 'application/json;charset=utf-8')
 }
 export function DeviceControlDefaultPolicy() {
   return (
@@ -695,13 +787,26 @@ export function DeviceControlDefaultPolicy() {
 }
 
 export function DeviceControlDevicePolicy() {
+  return <ManageDevicePolicies />
+}
+
+export function ManageDevicePolicies() {
   const [tab, setTab] = useState(0)
   const [policies, setPolicies] = useState<DevicePolicyRow[]>(policyRows)
+  const [savedPolicies, setSavedPolicies] = useState<DevicePolicyRow[]>(policyRows)
   const [selectedPolicyId, setSelectedPolicyId] = useState<number | null>(policyRows[0]?.id ?? null)
   const [editingPolicy, setEditingPolicy] = useState<DevicePolicyRow | null>(null)
   const [message, setMessage] = useState('')
 
+  const hasPendingChanges = JSON.stringify(policies) !== JSON.stringify(savedPolicies)
   const selectedPolicy = policies.find((policy) => policy.id === selectedPolicyId) ?? null
+  const orderedPolicies = [...policies].sort((a, b) => a.priority - b.priority)
+
+  const normalizePolicies = (items: DevicePolicyRow[]) => {
+    const regular = items.filter((policy) => !isDefaultPolicy(policy))
+    const defaults = items.filter(isDefaultPolicy)
+    return [...regular, ...defaults].map((policy, index) => ({ ...policy, priority: index + 1 }))
+  }
 
   const handleCreate = () => {
     setEditingPolicy(null)
@@ -709,31 +814,83 @@ export function DeviceControlDevicePolicy() {
   }
 
   const handleEdit = () => {
-    if (!selectedPolicy) return
+    if (!selectedPolicy || isDefaultPolicy(selectedPolicy)) {
+      setMessage('Default policy cannot be edited from policy list')
+      return
+    }
     setEditingPolicy(selectedPolicy)
     setTab(1)
   }
 
   const handleDelete = () => {
-    if (!selectedPolicyId) return
-    setPolicies((current) => current.filter((policy) => policy.id !== selectedPolicyId).map((policy, index) => ({ ...policy, priority: index + 1 })))
+    if (!selectedPolicyId || !selectedPolicy) return
+    if (isDefaultPolicy(selectedPolicy)) {
+      setMessage('Default policy cannot be deleted')
+      return
+    }
+    if (!window.confirm('Are you sure you want to delete this?')) return
+    const nextPolicies = normalizePolicies(policies.filter((policy) => policy.id !== selectedPolicyId))
+    setPolicies(nextPolicies)
+    setSavedPolicies(nextPolicies)
     setSelectedPolicyId(null)
     setMessage('Policy deleted successfully')
   }
 
   const handleSave = (form: PolicyFormState) => {
+    const normalizedName = form.policyName.trim().toLowerCase()
+    if (!normalizedName) {
+      setMessage('Policy name is required')
+      return
+    }
+    const isDuplicateName = policies.some((policy) => policy.name.trim().toLowerCase() === normalizedName && policy.id !== editingPolicy?.id)
+    if (isDuplicateName) {
+      setMessage('Policy name must be unique')
+      return
+    }
+
     if (editingPolicy) {
-      setPolicies((current) => current.map((policy) => policy.id === editingPolicy.id ? { ...createPolicyFromForm(form, policy.id, policy.priority), user: policy.user, userGroup: policy.userGroup, hostNames: policy.hostNames, hostGroup: policy.hostGroup } : policy))
+      const nextPolicies = normalizePolicies(policies.map((policy) => policy.id === editingPolicy.id ? { ...createPolicyFromForm(form, policy.id, policy.priority), policyState: policy.policyState } : policy))
+      setPolicies(nextPolicies)
+      setSavedPolicies(nextPolicies)
       setMessage('Policy updated successfully')
     } else {
       const nextId = Math.max(0, ...policies.map((policy) => policy.id)) + 1
-      const newPolicy = createPolicyFromForm(form, nextId, policies.length + 1)
-      setPolicies((current) => [...current, newPolicy])
+      const newPolicy = createPolicyFromForm(form, nextId, 1)
+      const nextPolicies = normalizePolicies([newPolicy, ...policies])
+      setPolicies(nextPolicies)
+      setSavedPolicies(nextPolicies)
       setSelectedPolicyId(newPolicy.id)
-      setMessage('Policy created successfully')
+      setMessage('Policy created successfully. It is disabled by default until manually enabled.')
     }
     setEditingPolicy(null)
-    setTab(0)
+    setTab(2)
+  }
+
+  const handleToggleState = (policyId: number, enabled: boolean) => {
+    setPolicies((current) => current.map((policy) => policy.id === policyId ? { ...policy, policyState: enabled ? 'Enabled' : 'Disabled' } : policy))
+  }
+
+  const handleMovePriority = (policyId: number, direction: 'up' | 'down') => {
+    setPolicies((current) => {
+      const normalized = normalizePolicies(current)
+      const index = normalized.findIndex((policy) => policy.id === policyId)
+      const targetIndex = direction === 'up' ? index - 1 : index + 1
+      if (index < 0 || targetIndex < 0 || targetIndex >= normalized.length || isDefaultPolicy(normalized[targetIndex])) return normalized
+      const next = [...normalized]
+      const [moved] = next.splice(index, 1)
+      next.splice(targetIndex, 0, moved)
+      return normalizePolicies(next)
+    })
+  }
+
+  const savePolicyListChanges = () => {
+    setSavedPolicies(policies)
+    setMessage('Policy list changes saved successfully')
+  }
+
+  const cancelPolicyListChanges = () => {
+    setPolicies(savedPolicies)
+    setMessage('Policy list changes discarded')
   }
 
   const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
@@ -744,8 +901,10 @@ export function DeviceControlDevicePolicy() {
       try {
         const parsed = JSON.parse(String(reader.result)) as DevicePolicyRow[]
         if (!Array.isArray(parsed)) throw new Error('Invalid policy file')
-        setPolicies(parsed.map((policy, index) => ({ ...policy, priority: index + 1 })))
-        setSelectedPolicyId(parsed[0]?.id ?? null)
+        const importedPolicies = normalizePolicies(parsed)
+        setPolicies(importedPolicies)
+        setSavedPolicies(importedPolicies)
+        setSelectedPolicyId(importedPolicies[0]?.id ?? null)
         setMessage('Policies imported successfully')
       } catch {
         setMessage('Invalid JSON policy file')
@@ -757,86 +916,39 @@ export function DeviceControlDevicePolicy() {
 
   return (
     <div className="flex w-full flex-col gap-4 pb-24">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <Typography variant="h5" fontWeight={800}>Device Policy</Typography>
-          <Typography variant="body2" color="text.secondary">Manage endpoint device control policies, actions, assignments, and notifications.</Typography>
-        </div>
-        <Button variant="contained" startIcon={<AddCircleOutlineOutlined />} onClick={handleCreate}>Create Policy</Button>
+      <div>
+        <Typography variant="h5" fontWeight={800}>Manage Device Policies</Typography>
+        <Typography variant="body2" color="text.secondary">Manage default policy, explicit policy creation, assignment, priority, and final policy list.</Typography>
       </div>
       <Paper elevation={0} className="rounded-2xl border border-gray-200 dark:border-gray-700">
         <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" scrollButtons="auto">
-          <Tab label="Policy List" />
+          <Tab label="Default Policies" />
           <Tab label={editingPolicy ? 'Edit Policy' : 'Create New Policy'} />
-          <Tab label="Policy Assignment" />
+          <Tab label="Policy List" />
         </Tabs>
       </Paper>
-      {tab === 0 && (
+      {tab === 0 && <DefaultPolicyPage />}
+      {tab === 1 && <PolicyForm editingPolicy={editingPolicy} onSave={handleSave} onBack={() => setTab(2)} />}
+      {tab === 2 && (
         <PolicyListPage
-          policies={policies}
+          policies={orderedPolicies}
           selectedPolicyId={selectedPolicyId}
           onSelect={setSelectedPolicyId}
           onCreate={handleCreate}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onExport={() => exportPoliciesToCsv(policies)}
+          onExport={() => exportPoliciesToCsv(orderedPolicies)}
+          onExportJson={() => exportPoliciesToJson(orderedPolicies)}
           onImport={handleImport}
+          onToggleState={handleToggleState}
+          onMovePriority={handleMovePriority}
+          hasPendingChanges={hasPendingChanges}
+          onSaveChanges={savePolicyListChanges}
+          onCancelChanges={cancelPolicyListChanges}
         />
       )}
-      {tab === 1 && <PolicyForm editingPolicy={editingPolicy} onSave={handleSave} onBack={() => setTab(0)} />}
-      {tab === 2 && <AssignmentPage />}
       <Snackbar open={!!message} autoHideDuration={2500} onClose={() => setMessage('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Alert severity={message.includes('Invalid') ? 'error' : 'success'} variant="filled" onClose={() => setMessage('')}>{message}</Alert>
-      </Snackbar>
-    </div>
-  )
-}
-
-export function ManageDevicePolicies() {
-  const [policies, setPolicies] = useState<DevicePolicyRow[]>(policyRows)
-  const [selectedPolicyId, setSelectedPolicyId] = useState<number | null>(policyRows[0]?.id ?? null)
-  const [message, setMessage] = useState('')
-
-  const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result)) as DevicePolicyRow[]
-        if (!Array.isArray(parsed)) throw new Error('Invalid policy file')
-        setPolicies(parsed.map((policy, index) => ({ ...policy, priority: index + 1 })))
-        setSelectedPolicyId(parsed[0]?.id ?? null)
-        setMessage('Policies imported successfully')
-      } catch {
-        setMessage('Invalid JSON policy file')
-      }
-    }
-    reader.readAsText(file)
-    event.target.value = ''
-  }
-
-  return (
-    <div className="flex w-full flex-col gap-4 pb-24">
-      <Typography variant="h5" fontWeight={800}>Manage Device Policies</Typography>
-      <AssignmentPage />
-      <PolicyListPage
-        policies={policies}
-        selectedPolicyId={selectedPolicyId}
-        onSelect={setSelectedPolicyId}
-        onCreate={() => setMessage('Use Device Policy > Create New Policy to add policies')}
-        onEdit={() => setMessage('Use Device Policy page to edit selected policies')}
-        onDelete={() => {
-          if (!selectedPolicyId) return
-          setPolicies((current) => current.filter((policy) => policy.id !== selectedPolicyId).map((policy, index) => ({ ...policy, priority: index + 1 })))
-          setSelectedPolicyId(null)
-          setMessage('Policy deleted successfully')
-        }}
-        onExport={() => exportPoliciesToCsv(policies)}
-        onImport={handleImport}
-      />
-      <Snackbar open={!!message} autoHideDuration={2500} onClose={() => setMessage('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-        <Alert severity={message.includes('Invalid') ? 'error' : 'success'} variant="filled" onClose={() => setMessage('')}>{message}</Alert>
+        <Alert severity={message.includes('Invalid') || message.includes('required') || message.includes('unique') || message.includes('cannot') ? 'error' : 'success'} variant="filled" onClose={() => setMessage('')}>{message}</Alert>
       </Snackbar>
     </div>
   )

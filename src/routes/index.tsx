@@ -24,8 +24,6 @@ import { ApplicationList } from '@pages/Applications';
 
 // Policy Management Pages
 import {
-    DeviceControlDefaultPolicy,
-    DeviceControlDevicePolicy,
     ManageDevicePolicies,
 } from '@pages/PolicyManagement';
 
@@ -141,14 +139,6 @@ const router = createBrowserRouter([
                         element: <ApplicationList />,
                     },
                     // Policy Management
-                    {
-                        path: ROUTES.POLICY_DEVICE_CONTROL_DEFAULT,
-                        element: <DeviceControlDefaultPolicy />,
-                    },
-                    {
-                        path: ROUTES.POLICY_DEVICE_CONTROL_DEVICE,
-                        element: <DeviceControlDevicePolicy />,
-                    },
                     {
                         path: ROUTES.POLICY_DEVICE_CONTROL_MANAGE,
                         element: <ManageDevicePolicies />,

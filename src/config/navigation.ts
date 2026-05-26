@@ -118,16 +118,6 @@ export const NAV_ITEMS: NavItem[] = [
                 icon: 'security',
                 children: [
                     {
-                        id: 'default-policy',
-                        title: 'Default Policy',
-                        icon: 'tune',
-                    },
-                    {
-                        id: 'device-policy',
-                        title: 'Device Policy',
-                        icon: 'rule',
-                    },
-                    {
                         id: 'manage-device-policies',
                         title: 'Manage Device Policies',
                         icon: 'playlist-check',
