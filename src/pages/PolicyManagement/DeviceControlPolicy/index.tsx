@@ -228,10 +228,6 @@ function SectionCard({ title, subtitle, children }: { title: string; subtitle?: 
   )
 }
 
-function FlagCell({ checked, onChange, disabled }: { checked?: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) {
-  return <Checkbox size="small" checked={!!checked} disabled={disabled} onChange={(event) => onChange?.(event.target.checked)} />
-}
-
 function DefaultPolicyPage() {
   const [rows, setRows] = useState<DefaultPolicyRow[]>(defaultPolicyRows)
   const [message, setMessage] = useState('')
@@ -349,6 +345,9 @@ interface PolicyListPageProps {
   onImport: (event: ChangeEvent<HTMLInputElement>) => void
   onToggleState?: (policyId: number, enabled: boolean) => void
   onMovePriority?: (policyId: number, direction: 'up' | 'down') => void
+  onToggleUserNotification?: (policyId: number, checked: boolean) => void
+  onToggleGenerateEvent?: (policyId: number, checked: boolean) => void
+  onToggleAlertManager?: (policyId: number, checked: boolean) => void
   hasPendingChanges?: boolean
   onSaveChanges?: () => void
   onCancelChanges?: () => void
@@ -359,7 +358,7 @@ function isDefaultPolicy(policy: DevicePolicyRow) {
   return policy.deviceSubCategory === 'Default' || policy.name.toLowerCase().includes('critical')
 }
 
-function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit, onDelete, onExport, onExportJson, onImport, onToggleState, onMovePriority, hasPendingChanges, onSaveChanges, onCancelChanges, showCreateButton = false }: PolicyListPageProps) {
+function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit, onDelete, onExport, onExportJson, onImport, onToggleState, onMovePriority, onToggleUserNotification, onToggleGenerateEvent, onToggleAlertManager, hasPendingChanges, onSaveChanges, onCancelChanges, showCreateButton = false }: PolicyListPageProps) {
   return (
     <div className="flex flex-col gap-4">
       <SectionCard title="Device Control Policy List" subtitle="Create, edit, delete, import, export, and assign device policies">
@@ -419,9 +418,9 @@ function PolicyListPage({ policies, selectedPolicyId, onSelect, onCreate, onEdit
                     <Chip size="small" color={row.policyState === 'Enabled' ? 'success' : 'default'} label={row.policyState} />
                   </td>
                   <td className="px-4 py-3">{row.policyAction}</td>
-                  <td className="px-4 py-2 text-center"><FlagCell checked={row.userNotification} /></td>
-                  <td className="px-4 py-2 text-center"><FlagCell checked={row.generateEvent} /></td>
-                  <td className="px-4 py-2 text-center"><FlagCell checked={row.alertManager} /></td>
+                  <td className="px-4 py-2 text-center"><Checkbox size="small" checked={row.userNotification} disabled={isDefaultPolicy(row)} onClick={(event) => event.stopPropagation()} onChange={(event) => onToggleUserNotification?.(row.id, event.target.checked)} /></td>
+                  <td className="px-4 py-2 text-center"><Checkbox size="small" checked={row.generateEvent} disabled={isDefaultPolicy(row)} onClick={(event) => event.stopPropagation()} onChange={(event) => onToggleGenerateEvent?.(row.id, event.target.checked)} /></td>
+                  <td className="px-4 py-2 text-center"><Checkbox size="small" checked={row.alertManager} disabled={isDefaultPolicy(row)} onClick={(event) => event.stopPropagation()} onChange={(event) => onToggleAlertManager?.(row.id, event.target.checked)} /></td>
                   <td className="px-4 py-2">{row.policySchedule || 'Not time bound'}</td>
                 </tr>
               ))}
@@ -870,6 +869,18 @@ export function ManageDevicePolicies() {
     setPolicies((current) => current.map((policy) => policy.id === policyId ? { ...policy, policyState: enabled ? 'Enabled' : 'Disabled' } : policy))
   }
 
+  const handleToggleUserNotification = (policyId: number, checked: boolean) => {
+    setPolicies((current) => current.map((policy) => policy.id === policyId ? { ...policy, userNotification: checked } : policy))
+  }
+
+  const handleToggleGenerateEvent = (policyId: number, checked: boolean) => {
+    setPolicies((current) => current.map((policy) => policy.id === policyId ? { ...policy, generateEvent: checked } : policy))
+  }
+
+  const handleToggleAlertManager = (policyId: number, checked: boolean) => {
+    setPolicies((current) => current.map((policy) => policy.id === policyId ? { ...policy, alertManager: checked } : policy))
+  }
+
   const handleMovePriority = (policyId: number, direction: 'up' | 'down') => {
     setPolicies((current) => {
       const normalized = normalizePolicies(current)
@@ -942,6 +953,9 @@ export function ManageDevicePolicies() {
           onImport={handleImport}
           onToggleState={handleToggleState}
           onMovePriority={handleMovePriority}
+          onToggleUserNotification={handleToggleUserNotification}
+          onToggleGenerateEvent={handleToggleGenerateEvent}
+          onToggleAlertManager={handleToggleAlertManager}
           hasPendingChanges={hasPendingChanges}
           onSaveChanges={savePolicyListChanges}
           onCancelChanges={cancelPolicyListChanges}
