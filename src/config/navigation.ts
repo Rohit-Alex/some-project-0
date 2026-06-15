@@ -130,18 +130,8 @@ export const NAV_ITEMS: NavItem[] = [
                 icon: 'apps',
                 children: [
                     {
-                        id: 'application-categories',
-                        title: 'Application Categories',
-                        icon: 'category',
-                    },
-                    {
-                        id: 'application-inventory',
-                        title: 'Application Inventory',
-                        icon: 'list-alt',
-                    },
-                    {
                         id: 'manage-application-policies',
-                        title: 'Manage Application Policies',
+                        title: 'Manage Application Control Policies',
                         icon: 'settings-apps',
                     },
                 ],

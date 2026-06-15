@@ -25,6 +25,7 @@ import { ApplicationList } from '@pages/Applications';
 // Policy Management Pages
 import {
     ManageDevicePolicies,
+    ManageApplicationPolicies,
 } from '@pages/PolicyManagement';
 
 // Dashboard Pages
@@ -142,6 +143,10 @@ const router = createBrowserRouter([
                     {
                         path: ROUTES.POLICY_DEVICE_CONTROL_MANAGE,
                         element: <ManageDevicePolicies />,
+                    },
+                    {
+                        path: ROUTES.POLICY_APP_CONTROL_MANAGE,
+                        element: <ManageApplicationPolicies />,
                     },
                     // Other dynamic routes (placeholders)
                     ...dynamicRoutes,
